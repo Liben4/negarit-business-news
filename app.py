@@ -17,7 +17,8 @@ import os
 import re
 import sqlite3
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from functools import wraps
 
 from flask import (
@@ -48,6 +49,12 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 SITE_NAME = "Negarit Business News"
 
+# The "Scheduled" datetime field in the admin form has no timezone of its
+# own (browsers send plain "YYYY-MM-DDTHH:MM"). We interpret that value as
+# local time in SITE_TZ, not server time, so scheduling behaves correctly
+# no matter which timezone the host (Render, a VPS, etc.) runs in.
+SITE_TZ = ZoneInfo(os.environ.get("SITE_TIMEZONE", "Africa/Addis_Ababa"))
+
 # ---------------------------------------------------------------------------
 # Database schema
 # ---------------------------------------------------------------------------
@@ -77,6 +84,7 @@ CREATE TABLE IF NOT EXISTS articles (
     author         TEXT NOT NULL DEFAULT 'Staff Writer',
     status         TEXT NOT NULL DEFAULT 'published',
     featured       INTEGER NOT NULL DEFAULT 0,
+    publish_at     TEXT,
     created_at     TEXT NOT NULL,
     updated_at     TEXT NOT NULL,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
@@ -183,12 +191,22 @@ def close_db(exception=None):
         db.close()
 
 
+def migrate_db(conn):
+    """Add columns/tables introduced after the initial release to an
+    existing database, so upgrading never requires deleting real data."""
+    existing_cols = {row["name"] for row in conn.execute("PRAGMA table_info(articles)").fetchall()}
+    if "publish_at" not in existing_cols:
+        conn.execute("ALTER TABLE articles ADD COLUMN publish_at TEXT")
+    conn.commit()
+
+
 def init_db():
     """Create tables and seed sample data the very first time the app runs."""
     first_run = not os.path.exists(DB_PATH)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA_SQL)
+    migrate_db(conn)
 
     if first_run:
         now = datetime.utcnow().isoformat()
@@ -302,7 +320,49 @@ def format_date(iso_string):
             return iso_string
 
 
+def format_datetime(iso_string):
+    """Render a stored naive-UTC timestamp as site-local time for display."""
+    if not iso_string:
+        return ""
+    try:
+        dt = datetime.fromisoformat(iso_string).replace(tzinfo=timezone.utc).astimezone(SITE_TZ)
+    except (ValueError, TypeError):
+        return iso_string
+    try:
+        return dt.strftime("%B %-d, %Y at %-I:%M %p")
+    except ValueError:
+        return dt.strftime("%B %d, %Y at %I:%M %p").replace(" 0", " ")
+
+
+def parse_local_datetime(value):
+    """Take a <input type=datetime-local> value ('YYYY-MM-DDTHH:MM'),
+    interpret it as SITE_TZ local time, and return a naive-UTC ISO string
+    for storage (matching created_at/updated_at's convention). None if
+    the value is missing or unparsable."""
+    if not value:
+        return None
+    try:
+        naive = datetime.strptime(value, "%Y-%m-%dT%H:%M")
+    except ValueError:
+        return None
+    return naive.replace(tzinfo=SITE_TZ).astimezone(timezone.utc).replace(tzinfo=None).isoformat()
+
+
+def to_datetime_local_value(iso_string):
+    """Inverse of parse_local_datetime — used to pre-fill the form's
+    datetime-local input when editing a scheduled article."""
+    if not iso_string:
+        return ""
+    try:
+        dt = datetime.fromisoformat(iso_string).replace(tzinfo=timezone.utc).astimezone(SITE_TZ)
+    except (ValueError, TypeError):
+        return ""
+    return dt.strftime("%Y-%m-%dT%H:%M")
+
+
 app.jinja_env.filters["format_date"] = format_date
+app.jinja_env.filters["format_datetime"] = format_datetime
+app.jinja_env.filters["datetime_local_value"] = to_datetime_local_value
 
 
 # ---------------------------------------------------------------------------
@@ -325,6 +385,21 @@ def get_csrf_token():
 
 
 app.jinja_env.globals["csrf_token"] = get_csrf_token
+
+
+@app.before_request
+def promote_scheduled_articles():
+    """Flip any 'scheduled' article whose publish time has passed over to
+    'published'. Runs on every request instead of relying on a cron/worker
+    process, which keeps deployment simple for a small site like this."""
+    now = datetime.utcnow().isoformat()
+    db = get_db()
+    db.execute(
+        "UPDATE articles SET status = 'published', updated_at = ? "
+        "WHERE status = 'scheduled' AND publish_at IS NOT NULL AND publish_at <= ?",
+        (now, now),
+    )
+    db.commit()
 
 
 @app.before_request
@@ -546,6 +621,7 @@ def admin_dashboard():
     stats = {
         "total": len(articles),
         "published": sum(1 for a in articles if a["status"] == "published"),
+        "scheduled": sum(1 for a in articles if a["status"] == "scheduled"),
         "drafts": sum(1 for a in articles if a["status"] == "draft"),
         "categories": db.execute("SELECT COUNT(*) FROM categories").fetchone()[0],
     }
@@ -565,12 +641,24 @@ def admin_new_article():
         content = request.form.get("content", "").strip()
         category_id = request.form.get("category_id") or None
         author = request.form.get("author", "").strip() or "Staff Writer"
-        status = "draft" if request.form.get("status") == "draft" else "published"
+        status = request.form.get("status")
+        if status not in ("draft", "scheduled", "published"):
+            status = "published"
         featured = 1 if request.form.get("featured") == "on" else 0
 
         if not title or not content:
             flash("Title and content are required.", "error")
             return render_template("admin/article_form.html", categories=categories, article=None, mode="new")
+
+        publish_at = None
+        if status == "scheduled":
+            publish_at = parse_local_datetime(request.form.get("publish_at"))
+            if not publish_at:
+                flash("Pick a publish date/time, or choose Draft/Published instead.", "error")
+                return render_template("admin/article_form.html", categories=categories, article=None, mode="new")
+            if publish_at <= datetime.utcnow().isoformat():
+                flash("Scheduled time must be in the future.", "error")
+                return render_template("admin/article_form.html", categories=categories, article=None, mode="new")
 
         slug = unique_article_slug(db, title)
         image_filename = save_upload(request.files.get("image"))
@@ -582,13 +670,15 @@ def admin_new_article():
         db.execute(
             """INSERT INTO articles
                (title, slug, summary, content, category_id, image_filename,
-                author, status, featured, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                author, status, featured, publish_at, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (title, slug, summary, content, category_id, image_filename,
-             author, status, featured, now, now),
+             author, status, featured, publish_at, now, now),
         )
         db.commit()
-        flash("Article published." if status == "published" else "Draft saved.", "success")
+        messages = {"published": "Article published.", "draft": "Draft saved.",
+                    "scheduled": f"Article scheduled for {format_datetime(publish_at)}."}
+        flash(messages[status], "success")
         return redirect(url_for("admin_dashboard"))
 
     return render_template("admin/article_form.html", categories=categories, article=None, mode="new")
@@ -609,12 +699,24 @@ def admin_edit_article(article_id):
         content = request.form.get("content", "").strip()
         category_id = request.form.get("category_id") or None
         author = request.form.get("author", "").strip() or "Staff Writer"
-        status = "draft" if request.form.get("status") == "draft" else "published"
+        status = request.form.get("status")
+        if status not in ("draft", "scheduled", "published"):
+            status = "published"
         featured = 1 if request.form.get("featured") == "on" else 0
 
         if not title or not content:
             flash("Title and content are required.", "error")
             return render_template("admin/article_form.html", categories=categories, article=art, mode="edit")
+
+        publish_at = None
+        if status == "scheduled":
+            publish_at = parse_local_datetime(request.form.get("publish_at"))
+            if not publish_at:
+                flash("Pick a publish date/time, or choose Draft/Published instead.", "error")
+                return render_template("admin/article_form.html", categories=categories, article=art, mode="edit")
+            if publish_at <= datetime.utcnow().isoformat():
+                flash("Scheduled time must be in the future.", "error")
+                return render_template("admin/article_form.html", categories=categories, article=art, mode="edit")
 
         slug = unique_article_slug(db, title, ignore_id=article_id)
         new_image = save_upload(request.files.get("image"))
@@ -633,13 +735,15 @@ def admin_edit_article(article_id):
 
         db.execute(
             """UPDATE articles SET title=?, slug=?, summary=?, content=?, category_id=?,
-               image_filename=?, author=?, status=?, featured=?, updated_at=?
+               image_filename=?, author=?, status=?, featured=?, publish_at=?, updated_at=?
                WHERE id=?""",
             (title, slug, summary, content, category_id, image_filename,
-             author, status, featured, now, article_id),
+             author, status, featured, publish_at, now, article_id),
         )
         db.commit()
-        flash("Article updated.", "success")
+        messages = {"published": "Article updated.", "draft": "Draft saved.",
+                    "scheduled": f"Article scheduled for {format_datetime(publish_at)}."}
+        flash(messages[status], "success")
         return redirect(url_for("admin_dashboard"))
 
     return render_template("admin/article_form.html", categories=categories, article=art, mode="edit")

@@ -16,6 +16,7 @@
 <section class="wrap stats-strip">
   <div class="stat"><span class="stat__value">{{ stats.total }}</span><span class="stat__label">Total</span></div>
   <div class="stat"><span class="stat__value">{{ stats.published }}</span><span class="stat__label">Published</span></div>
+  <div class="stat"><span class="stat__value">{{ stats.scheduled }}</span><span class="stat__label">Scheduled</span></div>
   <div class="stat"><span class="stat__value">{{ stats.drafts }}</span><span class="stat__label">Drafts</span></div>
   <div class="stat"><span class="stat__value">{{ stats.categories }}</span><span class="stat__label">Sections</span></div>
 </section>
@@ -41,7 +42,10 @@
             {% if art['featured'] %}<span class="tag tag--featured">Featured</span>{% endif %}
           </td>
           <td>{{ art['category_name'] or '—' }}</td>
-          <td><span class="tag tag--{{ art['status'] }}">{{ art['status']|capitalize }}</span></td>
+          <td>
+            <span class="tag tag--{{ art['status'] }}">{{ art['status']|capitalize }}</span>
+            {% if art['status'] == 'scheduled' %}<div class="admin-table__schedule-hint">{{ art['publish_at']|format_datetime }}</div>{% endif %}
+          </td>
           <td>{{ art['updated_at']|format_date }}</td>
           <td class="admin-table__actions">
             <a href="{{ url_for('article', slug=art['slug']) }}" class="btn btn--small btn--ghost">View</a>

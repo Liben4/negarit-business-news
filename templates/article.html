@@ -7,6 +7,8 @@
 <article class="wrap article">
   {% if article['status'] == 'draft' %}
   <div class="draft-banner">Draft preview &mdash; only visible to you while logged in as admin.</div>
+  {% elif article['status'] == 'scheduled' %}
+  <div class="draft-banner draft-banner--scheduled">Scheduled to publish {{ article['publish_at']|format_datetime }} &mdash; only visible to you until then.</div>
   {% endif %}
 
   {{ eyebrow(article['category_name'] or 'News', url_for('category', slug=article['category_slug']) if article['category_slug'] else None) }}
