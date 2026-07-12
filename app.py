@@ -73,6 +73,13 @@ CREATE TABLE IF NOT EXISTS admin_users (
     created_at     TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS media (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename       TEXT NOT NULL UNIQUE,
+    original_name  TEXT,
+    uploaded_at    TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS articles (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
     title          TEXT NOT NULL,
@@ -286,8 +293,9 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def save_upload(file_storage):
-    """Save an uploaded image with a collision-proof name; return the filename or None."""
+def save_upload(file_storage, db):
+    """Save an uploaded image with a collision-proof name, record it in the
+    media library, and return the filename (or None)."""
     if not file_storage or file_storage.filename == "":
         return None
     if not allowed_file(file_storage.filename):
@@ -296,10 +304,16 @@ def save_upload(file_storage):
     safe_name = secure_filename(file_storage.filename)
     unique_name = f"{secrets.token_hex(6)}_{safe_name}"
     file_storage.save(os.path.join(app.config["UPLOAD_FOLDER"], unique_name))
+    db.execute(
+        "INSERT INTO media (filename, original_name, uploaded_at) VALUES (?, ?, ?)",
+        (unique_name, safe_name, datetime.utcnow().isoformat()),
+    )
     return unique_name
 
 
-def delete_upload(filename):
+def delete_upload(filename, db=None):
+    """Remove an uploaded file from disk and, if a db handle is given,
+    from the media library table too."""
     if not filename:
         return
     path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
@@ -308,6 +322,24 @@ def delete_upload(filename):
             os.remove(path)
         except OSError:
             pass
+    if db is not None:
+        db.execute("DELETE FROM media WHERE filename = ?", (filename,))
+
+
+def resolve_image_selection(req, db, current_filename=None):
+    """Decide which image an article should use, in priority order:
+    a freshly uploaded file > an existing library image picked from the
+    dropdown > (if 'remove image' was checked) none > the current image
+    unchanged. Uploads are saved into the media library as a side effect."""
+    uploaded = save_upload(req.files.get("image"), db)
+    if uploaded:
+        return uploaded
+    existing_choice = req.form.get("existing_image")
+    if existing_choice:
+        return existing_choice
+    if req.form.get("remove_image") == "on":
+        return None
+    return current_filename
 
 
 def format_date(iso_string):
@@ -570,9 +602,47 @@ def admin_logout():
 @app.route("/admin/media")
 @login_required
 def admin_media():
-    # Minimal placeholder — full upload/browse/delete library lands in the
-    # media-library feature branch.
-    return render_template("admin/media.html")
+    db = get_db()
+    items = db.execute("SELECT * FROM media ORDER BY uploaded_at DESC").fetchall()
+    # Figure out which filenames are currently used by an article, so the
+    # library can show that and block deleting images still in use.
+    used = {row["image_filename"] for row in db.execute(
+        "SELECT DISTINCT image_filename FROM articles WHERE image_filename IS NOT NULL"
+    ).fetchall()}
+    media = [dict(item, in_use=item["filename"] in used) for item in items]
+    return render_template("admin/media.html", media=media)
+
+
+@app.route("/admin/media/upload", methods=["POST"])
+@login_required
+def admin_media_upload():
+    db = get_db()
+    filename = save_upload(request.files.get("image"), db)
+    if filename:
+        db.commit()
+        flash("Image uploaded to the library.", "success")
+    return redirect(url_for("admin_media"))
+
+
+@app.route("/admin/media/delete/<int:media_id>", methods=["POST"])
+@login_required
+def admin_media_delete(media_id):
+    db = get_db()
+    item = db.execute("SELECT * FROM media WHERE id = ?", (media_id,)).fetchone()
+    if item is None:
+        abort(404)
+
+    in_use = db.execute(
+        "SELECT COUNT(*) FROM articles WHERE image_filename = ?", (item["filename"],)
+    ).fetchone()[0]
+    if in_use:
+        flash(f"That image is used by {in_use} article(s) — remove it from those articles first.", "error")
+        return redirect(url_for("admin_media"))
+
+    delete_upload(item["filename"], db)
+    db.commit()
+    flash("Image deleted.", "success")
+    return redirect(url_for("admin_media"))
 
 
 @app.route("/admin/change-password", methods=["GET", "POST"])
@@ -634,6 +704,7 @@ def admin_dashboard():
 def admin_new_article():
     db = get_db()
     categories = db.execute("SELECT * FROM categories ORDER BY name").fetchall()
+    media = db.execute("SELECT * FROM media ORDER BY uploaded_at DESC").fetchall()
 
     if request.method == "POST":
         title = request.form.get("title", "").strip()
@@ -648,20 +719,20 @@ def admin_new_article():
 
         if not title or not content:
             flash("Title and content are required.", "error")
-            return render_template("admin/article_form.html", categories=categories, article=None, mode="new")
+            return render_template("admin/article_form.html", categories=categories, media=media, article=None, mode="new")
 
         publish_at = None
         if status == "scheduled":
             publish_at = parse_local_datetime(request.form.get("publish_at"))
             if not publish_at:
                 flash("Pick a publish date/time, or choose Draft/Published instead.", "error")
-                return render_template("admin/article_form.html", categories=categories, article=None, mode="new")
+                return render_template("admin/article_form.html", categories=categories, media=media, article=None, mode="new")
             if publish_at <= datetime.utcnow().isoformat():
                 flash("Scheduled time must be in the future.", "error")
-                return render_template("admin/article_form.html", categories=categories, article=None, mode="new")
+                return render_template("admin/article_form.html", categories=categories, media=media, article=None, mode="new")
 
         slug = unique_article_slug(db, title)
-        image_filename = save_upload(request.files.get("image"))
+        image_filename = resolve_image_selection(request, db)
         now = datetime.utcnow().isoformat()
 
         if featured:
@@ -681,7 +752,7 @@ def admin_new_article():
         flash(messages[status], "success")
         return redirect(url_for("admin_dashboard"))
 
-    return render_template("admin/article_form.html", categories=categories, article=None, mode="new")
+    return render_template("admin/article_form.html", categories=categories, media=media, article=None, mode="new")
 
 
 @app.route("/admin/edit/<int:article_id>", methods=["GET", "POST"])
@@ -692,6 +763,7 @@ def admin_edit_article(article_id):
     if art is None:
         abort(404)
     categories = db.execute("SELECT * FROM categories ORDER BY name").fetchall()
+    media = db.execute("SELECT * FROM media ORDER BY uploaded_at DESC").fetchall()
 
     if request.method == "POST":
         title = request.form.get("title", "").strip()
@@ -706,27 +778,20 @@ def admin_edit_article(article_id):
 
         if not title or not content:
             flash("Title and content are required.", "error")
-            return render_template("admin/article_form.html", categories=categories, article=art, mode="edit")
+            return render_template("admin/article_form.html", categories=categories, media=media, article=art, mode="edit")
 
         publish_at = None
         if status == "scheduled":
             publish_at = parse_local_datetime(request.form.get("publish_at"))
             if not publish_at:
                 flash("Pick a publish date/time, or choose Draft/Published instead.", "error")
-                return render_template("admin/article_form.html", categories=categories, article=art, mode="edit")
+                return render_template("admin/article_form.html", categories=categories, media=media, article=art, mode="edit")
             if publish_at <= datetime.utcnow().isoformat():
                 flash("Scheduled time must be in the future.", "error")
-                return render_template("admin/article_form.html", categories=categories, article=art, mode="edit")
+                return render_template("admin/article_form.html", categories=categories, media=media, article=art, mode="edit")
 
         slug = unique_article_slug(db, title, ignore_id=article_id)
-        new_image = save_upload(request.files.get("image"))
-        image_filename = art["image_filename"]
-        if new_image:
-            delete_upload(art["image_filename"])
-            image_filename = new_image
-        elif request.form.get("remove_image") == "on":
-            delete_upload(art["image_filename"])
-            image_filename = None
+        image_filename = resolve_image_selection(request, db, current_filename=art["image_filename"])
 
         now = datetime.utcnow().isoformat()
 
@@ -746,7 +811,7 @@ def admin_edit_article(article_id):
         flash(messages[status], "success")
         return redirect(url_for("admin_dashboard"))
 
-    return render_template("admin/article_form.html", categories=categories, article=art, mode="edit")
+    return render_template("admin/article_form.html", categories=categories, media=media, article=art, mode="edit")
 
 
 @app.route("/admin/delete/<int:article_id>", methods=["POST"])
@@ -756,7 +821,9 @@ def admin_delete_article(article_id):
     art = db.execute("SELECT * FROM articles WHERE id = ?", (article_id,)).fetchone()
     if art is None:
         abort(404)
-    delete_upload(art["image_filename"])
+    # Note: the article's image is left in the media library on purpose —
+    # it may be reused by other articles. Remove unused images from
+    # the Media Library page if you want to reclaim disk space.
     db.execute("DELETE FROM articles WHERE id = ?", (article_id,))
     db.commit()
     flash("Article deleted.", "success")
