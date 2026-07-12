@@ -65,10 +65,17 @@
 
       <label class="field">
         <span>Status</span>
-        <select name="status">
+        <select name="status" id="status-select">
           <option value="published" {% if not article or article['status'] == 'published' %}selected{% endif %}>Published</option>
+          <option value="scheduled" {% if article and article['status'] == 'scheduled' %}selected{% endif %}>Scheduled</option>
           <option value="draft" {% if article and article['status'] == 'draft' %}selected{% endif %}>Draft</option>
         </select>
+      </label>
+
+      <label class="field" id="publish-at-field">
+        <span>Publish date/time <em>(site time — only used when status is Scheduled)</em></span>
+        <input type="datetime-local" name="publish_at"
+               value="{{ article['publish_at']|datetime_local_value if article else '' }}">
       </label>
 
       <label class="checkbox checkbox--standalone">
@@ -83,4 +90,19 @@
     </div>
   </form>
 </section>
+
+<script>
+  // Progressive enhancement only — the publish_at field still works fine
+  // if this never runs, it's just always visible instead of toggled.
+  (function () {
+    var statusSelect = document.getElementById('status-select');
+    var publishAtField = document.getElementById('publish-at-field');
+    if (!statusSelect || !publishAtField) return;
+    function sync() {
+      publishAtField.style.display = statusSelect.value === 'scheduled' ? '' : 'none';
+    }
+    statusSelect.addEventListener('change', sync);
+    sync();
+  })();
+</script>
 {% endblock %}

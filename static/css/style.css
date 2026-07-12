@@ -464,6 +464,12 @@ main { display: block; padding-bottom: 64px; }
   margin-bottom: 22px;
 }
 
+.draft-banner--scheduled {
+  background: #E7EEF7;
+  border-color: #C3D5EA;
+  color: var(--brand-blue-dk);
+}
+
 /* =========================================================================
    Empty states + 404
    ========================================================================= */
@@ -618,8 +624,17 @@ main { display: block; padding-bottom: 64px; }
 }
 
 .tag--published { background: #E9F5EC; color: #1E6B34; margin-left: 0; }
+.tag--scheduled { background: #E7EEF7; color: var(--brand-blue-dk); margin-left: 0; }
 .tag--draft { background: #F0EEE9; color: #7A6A4A; margin-left: 0; }
 .tag--featured { background: #FCEFE1; color: var(--herald-orange-dk); }
+
+.admin-table__schedule-hint {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--slate);
+  margin-top: 4px;
+  white-space: nowrap;
+}
 
 /* =========================================================================
    Admin: forms (login, change password, article form)
@@ -655,6 +670,7 @@ main { display: block; padding-bottom: 64px; }
 .field input[type="text"],
 .field input[type="password"],
 .field input[type="file"],
+.field input[type="datetime-local"],
 .field select,
 .field textarea {
   font-family: var(--font-body);
