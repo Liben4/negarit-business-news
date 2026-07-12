@@ -176,6 +176,15 @@ plain HTTP.
    by `.gitignore`) — each environment should generate its own DB and admin
    password rather than sharing one.
 
+## Troubleshooting
+
+**`ModuleNotFoundError: No module named 'tzdata'` / `ZoneInfoNotFoundError`
+on Windows** — Windows has no OS-level IANA time zone database (Linux/Mac
+do), which `zoneinfo` needs to resolve `SITE_TIMEZONE`. Fixed as of this
+version via the `tzdata` package in `requirements.txt` — if you still hit
+this, run `pip install -r requirements.txt` again (or `pip install
+tzdata` directly) and restart the app.
+
 ## Development workflow
 
 This repo now uses git, with one feature branch per change, merged into
