@@ -217,6 +217,42 @@ main { display: block; padding-bottom: 64px; }
 }
 
 /* =========================================================================
+   Admin sub-navigation (shown site-wide while logged in)
+   ========================================================================= */
+
+.admin-subnav { background: var(--ink-navy); }
+
+.admin-subnav__inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 9px 24px;
+}
+
+.admin-subnav__links { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.admin-subnav a {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #AFC0D2;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.admin-subnav a:hover, .admin-subnav a:focus-visible {
+  color: #fff;
+  background: rgba(217,102,28,0.35);
+}
+
+.admin-subnav__logout { color: #E4A186 !important; }
+.admin-subnav__logout:hover { color: #fff !important; background: var(--herald-orange-dk) !important; }
+
+/* =========================================================================
    Flash messages
    ========================================================================= */
 
