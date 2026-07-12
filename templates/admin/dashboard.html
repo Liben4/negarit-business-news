@@ -9,9 +9,7 @@
     <p class="admin-bar__hint">Signed in as {{ session.get('admin_username') }}</p>
   </div>
   <div class="admin-bar__actions">
-    <a href="{{ url_for('admin_change_password') }}" class="btn btn--ghost">Change password</a>
     <a href="{{ url_for('admin_new_article') }}" class="btn btn--primary">New article</a>
-    <a href="{{ url_for('admin_logout') }}" class="btn btn--ghost">Log out</a>
   </div>
 </section>
 

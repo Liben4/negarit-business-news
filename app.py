@@ -492,6 +492,14 @@ def admin_logout():
     return redirect(url_for("admin_login"))
 
 
+@app.route("/admin/media")
+@login_required
+def admin_media():
+    # Minimal placeholder — full upload/browse/delete library lands in the
+    # media-library feature branch.
+    return render_template("admin/media.html")
+
+
 @app.route("/admin/change-password", methods=["GET", "POST"])
 @login_required
 def admin_change_password():

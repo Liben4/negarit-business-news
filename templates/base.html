@@ -38,6 +38,20 @@
   </nav>
 </header>
 
+{% if is_admin %}
+<div class="admin-subnav">
+  <div class="wrap admin-subnav__inner">
+    <div class="admin-subnav__links">
+      <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('admin_media') }}">Media Library</a>
+      <a href="{{ url_for('admin_new_article') }}">+ New Article</a>
+      <a href="{{ url_for('admin_change_password') }}">Change Password</a>
+    </div>
+    <a href="{{ url_for('admin_logout') }}" class="admin-subnav__logout">Log Out</a>
+  </div>
+</div>
+{% endif %}
+
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
   <div class="wrap flash-stack">
