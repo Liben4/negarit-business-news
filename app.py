@@ -17,8 +17,8 @@ import os
 import re
 import sqlite3
 import secrets
-from datetime import datetime, timezone
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from functools import wraps
 
 from flask import (
@@ -53,7 +53,22 @@ SITE_NAME = "Negarit Business News"
 # own (browsers send plain "YYYY-MM-DDTHH:MM"). We interpret that value as
 # local time in SITE_TZ, not server time, so scheduling behaves correctly
 # no matter which timezone the host (Render, a VPS, etc.) runs in.
-SITE_TZ = ZoneInfo(os.environ.get("SITE_TIMEZONE", "Africa/Addis_Ababa"))
+#
+# zoneinfo needs an IANA time zone database to resolve names like
+# "Africa/Addis_Ababa". Linux/Mac ship one at the OS level; Windows (and
+# some minimal Docker images) don't, so the 'tzdata' package in
+# requirements.txt provides it instead. If that's ever missing anyway
+# (e.g. requirements.txt wasn't reinstalled after an update), fall back to
+# a fixed UTC+3 offset — Addis Ababa's actual offset, which has no DST to
+# worry about — rather than crashing the whole app on startup.
+_site_tz_name = os.environ.get("SITE_TIMEZONE", "Africa/Addis_Ababa")
+try:
+    SITE_TZ = ZoneInfo(_site_tz_name)
+except ZoneInfoNotFoundError:
+    print(f"WARNING: timezone data for '{_site_tz_name}' not found "
+          f"(run: pip install -r requirements.txt). Falling back to a "
+          f"fixed UTC+3 offset for scheduled publish times.")
+    SITE_TZ = timezone(timedelta(hours=3))
 
 # ---------------------------------------------------------------------------
 # Database schema
@@ -343,27 +358,28 @@ def resolve_image_selection(req, db, current_filename=None):
 
 
 def format_date(iso_string):
+    """'%-d' (no leading zero) is a Linux/Mac-only strftime extension —
+    it doesn't exist on Windows. Compute the day manually instead of
+    relying on a platform-specific flag, so this works everywhere."""
     try:
-        return datetime.fromisoformat(iso_string).strftime("%B %-d, %Y")
+        dt = datetime.fromisoformat(iso_string)
     except (ValueError, TypeError):
-        try:
-            return datetime.fromisoformat(iso_string).strftime("%B %d, %Y").replace(" 0", " ")
-        except (ValueError, TypeError):
-            return iso_string
+        return iso_string
+    return f"{dt:%B} {dt.day}, {dt:%Y}"
 
 
 def format_datetime(iso_string):
-    """Render a stored naive-UTC timestamp as site-local time for display."""
+    """Render a stored naive-UTC timestamp as site-local time for display.
+    Same portability note as format_date — hour/day computed manually."""
     if not iso_string:
         return ""
     try:
         dt = datetime.fromisoformat(iso_string).replace(tzinfo=timezone.utc).astimezone(SITE_TZ)
     except (ValueError, TypeError):
         return iso_string
-    try:
-        return dt.strftime("%B %-d, %Y at %-I:%M %p")
-    except ValueError:
-        return dt.strftime("%B %d, %Y at %I:%M %p").replace(" 0", " ")
+    hour_12 = dt.hour % 12 or 12
+    am_pm = "AM" if dt.hour < 12 else "PM"
+    return f"{dt:%B} {dt.day}, {dt:%Y} at {hour_12}:{dt:%M} {am_pm}"
 
 
 def parse_local_datetime(value):
