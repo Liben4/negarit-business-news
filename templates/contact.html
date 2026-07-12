@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Contact — {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="wrap static-page">
+  <h1>Contact</h1>
+  <p class="lede">Have a tip, a correction, or a story idea? Get in touch.</p>
+
+  <dl class="contact-list">
+    <div class="contact-list__row">
+      <dt>Newsroom</dt>
+      <dd><a href="mailto:news@negarit.example">news@negarit.example</a></dd>
+    </div>
+    <div class="contact-list__row">
+      <dt>Advertising</dt>
+      <dd><a href="mailto:ads@negarit.example">ads@negarit.example</a></dd>
+    </div>
+    <div class="contact-list__row">
+      <dt>Phone</dt>
+      <dd>+251 11 000 0000</dd>
+    </div>
+    <div class="contact-list__row">
+      <dt>Address</dt>
+      <dd>Addis Ababa, Ethiopia</dd>
+    </div>
+  </dl>
+
+  <p class="fine-print">Replace these placeholder details in <code>templates/contact.html</code> with your
+  real contact information before publishing.</p>
+</section>
+{% endblock %}
