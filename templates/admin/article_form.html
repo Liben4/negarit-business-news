@@ -49,9 +49,21 @@
       </label>
 
       <label class="field">
-        <span>Image {% if mode == 'edit' and article['image_filename'] %}<em>(leave blank to keep current)</em>{% endif %}</span>
+        <span>Upload new image {% if mode == 'edit' and article['image_filename'] %}<em>(leave blank to keep current)</em>{% endif %}</span>
         <input type="file" name="image" accept="image/png,image/jpeg,image/webp,image/gif">
       </label>
+
+      {% if media %}
+      <label class="field">
+        <span>Or choose from media library <em>(used only if no new file is uploaded above)</em></span>
+        <select name="existing_image">
+          <option value="">— Don't change —</option>
+          {% for item in media %}
+          <option value="{{ item['filename'] }}">{{ item['original_name'] }} &middot; {{ item['uploaded_at']|format_date }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      {% endif %}
 
       {% if mode == 'edit' and article['image_filename'] %}
       <div class="field field--wide current-image">
