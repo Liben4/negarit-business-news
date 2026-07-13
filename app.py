@@ -33,8 +33,14 @@ from werkzeug.utils import secure_filename
 # ---------------------------------------------------------------------------
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "negarit.db")
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
+
+# Where the database and uploaded images live. Defaults to this project's
+# own folder for local development. In production on a host with an
+# ephemeral filesystem (e.g. Render), set DATA_DIR to a mounted persistent
+# disk's path (e.g. /var/data) so this data survives redeploys/restarts.
+DATA_DIR = os.environ.get("DATA_DIR", BASE_DIR)
+DB_PATH = os.path.join(DATA_DIR, "negarit.db")
+UPLOAD_FOLDER = os.path.join(DATA_DIR, "uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif"}
 ARTICLES_PER_PAGE = 6
 
@@ -483,6 +489,14 @@ def inject_globals():
 # ---------------------------------------------------------------------------
 # Public routes
 # ---------------------------------------------------------------------------
+
+@app.route("/uploads/<path:filename>")
+def serve_upload(filename):
+    """Serve uploaded images from UPLOAD_FOLDER. Kept separate from
+    Flask's automatic /static handling because UPLOAD_FOLDER can point
+    outside the app folder entirely (e.g. a persistent disk in production)."""
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
 
 @app.route("/")
 def index():

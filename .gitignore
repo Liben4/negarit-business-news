@@ -2,8 +2,8 @@
 negarit.db
 
 # Uploaded images (user content, not source)
-static/uploads/*
-!static/uploads/.gitkeep
+uploads/*
+!uploads/.gitkeep
 
 # Python
 __pycache__/

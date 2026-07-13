@@ -68,7 +68,7 @@
       {% if mode == 'edit' and article['image_filename'] %}
       <div class="field field--wide current-image">
         <span>Current image</span>
-        <img src="{{ url_for('static', filename='uploads/' + article['image_filename']) }}" alt="">
+        <img src="{{ url_for('serve_upload', filename=article['image_filename']) }}" alt="">
         <label class="checkbox">
           <input type="checkbox" name="remove_image"> Remove this image
         </label>

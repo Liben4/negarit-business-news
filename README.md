@@ -12,8 +12,9 @@ publishing, drafts/published, image upload + media library).
 **Sprint 3 — Site enhancements:** not started (featured section is already
 in from Sprint 2's base; ticker, search, most-read, newsletter signup still
 open).
-**Sprint 4 — Production readiness:** not started (Render deploy, domain,
-HTTPS, SEO, analytics).
+**Sprint 4 — Production readiness:** in progress (Render deploy guide below,
+including the persistent-storage setup it needs; domain/HTTPS covered in
+the same walkthrough; SEO and analytics still open).
 
 ## Project structure
 
@@ -22,9 +23,9 @@ negarit-business-news/
 ├── app.py                        # routes, DB helpers, auth, CRUD, scheduling
 ├── requirements.txt
 ├── Procfile                      # for Render/Railway/Heroku-style hosts
-├── static/
-│   ├── css/style.css
-│   └── uploads/                  # images land here (auto-created)
+├── static/css/style.css
+├── uploads/                       # images land here (auto-created; gitignored)
+├── negarit.db                     # created automatically on first run (not in git)
 ├── templates/
 │   ├── base.html                  # masthead, nav, admin subnav, footer
 │   ├── index.html                 # homepage (featured + latest)
@@ -34,8 +35,11 @@ negarit-business-news/
 │   ├── 404.html
 │   └── admin/                      # login, dashboard, article form,
 │                                    # media library, change password
-└── negarit.db                      # created automatically on first run (not in git)
 ```
+
+`DB_PATH` and `UPLOAD_FOLDER` both live under `DATA_DIR` (defaults to this
+project folder). In production on a host with an ephemeral filesystem,
+point `DATA_DIR` at a persistent disk instead — see Deploying below.
 
 ## Run it locally
 
@@ -124,6 +128,7 @@ locally too if you use `python-dotenv`, not included by default):
 |---|---|---|
 | `SECRET_KEY` | Signs session cookies. **Set this in production** — without it, a new random key is generated on every restart, which logs every admin session out each time the process restarts. | random per-process |
 | `SITE_TIMEZONE` | Timezone used to interpret "Scheduled" publish times you type into the admin form. | `Africa/Addis_Ababa` |
+| `DATA_DIR` | Folder holding `negarit.db` and `uploads/`. Point this at a persistent disk in production (see Deploying) — otherwise your data is wiped on every redeploy/restart. | this project's folder |
 
 ## Customizing
 
@@ -134,47 +139,111 @@ locally too if you use `python-dotenv`, not included by default):
   `templates/about.html` and `templates/contact.html`.
 - **Site name**: `SITE_NAME` near the top of `app.py`.
 
-## Deploying
+## Deploying (Render)
 
-Any host that can run a Python/WSGI app works. Two common paths (Sprint 4
-will walk through the Render path specifically when we get there):
+This section assumes Render specifically, since that's the target in the
+Sprint 4 plan. **Read this before you deploy** — the persistence step
+(step 4) isn't optional; skipping it means your articles and images get
+wiped the first time the service redeploys or goes idle.
 
-### Option A — PaaS (Render, Railway, PythonAnywhere)
-The included `Procfile` (`web: gunicorn app:app`) is ready for
-Render/Railway-style platforms: push the repo to GitHub, connect it, set
-the `SECRET_KEY` (and optionally `SITE_TIMEZONE`) environment variable, and
-deploy. PythonAnywhere doesn't use a Procfile — instead point its "Manual
-configuration (WSGI)" setup at `app.app` following their Flask quickstart.
+**Cost**: Render's free tier looks tempting but doesn't actually work for
+this app — free web services spin down after 15 minutes idle, and Render
+wipes the local filesystem (your database + uploaded images) on *every*
+spin-down, not just on redeploys. Render's free PostgreSQL is a 30-day
+trial, not a permanent free option, so it doesn't avoid the cost either —
+it would just delay it while adding a real database migration. The
+practical setup is a **Starter web service ($7/mo) + a small persistent
+disk (~$0.25/mo for 1GB)** ≈ **$7.25/month total**, on Render's free Hobby
+workspace tier (no extra per-seat fees for a solo project). Always-on, no
+data loss, keeps this exact codebase.
 
-### Option B — Your own VPS (Ubuntu + gunicorn + nginx)
+### 1. Push the code to GitHub
+Skip this if it's already there.
 ```bash
-# on the server
+# from inside negarit-business-news/
+git remote add origin <your-new-empty-github-repo-url>
+git push -u origin main
+```
+(Create the empty repo on GitHub first — don't initialize it with a
+README/license, since this folder already has its own git history.)
+
+### 2. Create the Render Web Service
+1. Sign up / log in at [render.com](https://render.com) and connect your GitHub account.
+2. **New +** → **Web Service** → select the `negarit-business-news` repo.
+3. Render should auto-detect Python. Set:
+   - **Runtime**: Python 3
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn app:app` (this matches the included `Procfile`)
+4. **Instance Type**: choose **Starter** ($7/mo) — not Free, per the cost note above.
+
+### 3. Set environment variables
+In the service's **Environment** tab, add:
+| Key | Value |
+|---|---|
+| `SECRET_KEY` | a random string — generate one with `python3 -c "import secrets; print(secrets.token_hex(32))"` |
+| `DATA_DIR` | `/var/data` |
+| `SITE_TIMEZONE` | `Africa/Addis_Ababa` (optional — this is already the default) |
+
+### 4. Add the persistent disk
+Still on the service creation/settings page, under **Disks**:
+- **Mount Path**: `/var/data` (must match `DATA_DIR` above exactly)
+- **Size**: 1 GB is plenty to start (articles + a good number of images)
+
+This is the step that actually prevents data loss — `DATA_DIR=/var/data`
+without a disk mounted there does nothing.
+
+### 5. Deploy and get your admin password
+Click **Create Web Service**. Watch the **Logs** tab for the first-run
+banner — it only prints once, so copy the password from there:
+```
+Admin login URL : /admin/login
+Admin username  : admin
+Admin password  : <random>
+```
+Your site is live at `https://your-service-name.onrender.com`. Log in and
+change that password immediately from the admin bar.
+
+### 6. Connect your custom domain
+In the service's **Settings** → **Custom Domains**:
+1. Click **Add Custom Domain**, enter your domain.
+2. Render shows you a DNS record to add (an `A`/`ANAME` record for a root
+   domain like `negarit.com`, or a `CNAME` for a subdomain like
+   `www.negarit.com`) — add it at wherever you bought the domain
+   (Namecheap, GoDaddy, Cloudflare, etc.).
+3. Back in Render, click **Verify**. DNS can take a few minutes to
+   propagate — if verification fails immediately, wait and retry.
+4. Once verified, Render automatically issues a **free TLS certificate**
+   for the domain — no separate HTTPS setup needed, and no cost.
+
+### Redeploying after future changes
+Render auto-deploys on every push to `main` by default. Your normal
+feature-branch workflow (branch → test → merge to main) continues to work
+exactly as before — merging to `main` is what triggers the live update.
+
+### Alternative: your own VPS (Ubuntu + gunicorn + nginx)
+If you'd rather not use Render at all:
+```bash
 sudo apt update && sudo apt install python3-venv nginx
 cd /var/www && git clone <your-repo-url> negarit-business-news
 cd negarit-business-news
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-
-# run with gunicorn (add a systemd service to keep it alive on reboot)
-gunicorn --workers 3 --bind 127.0.0.1:8000 app:app
+export DATA_DIR=/var/www/negarit-business-news   # or anywhere with disk space
+gunicorn --workers 3 --bind 127.0.0.1:8000 app:app   # add a systemd service to keep it alive on reboot
 ```
-Then point nginx at `127.0.0.1:8000` as a reverse proxy, and get an SSL
-certificate (e.g. `certbot --nginx`) so the admin login isn't sent over
-plain HTTP.
+Point nginx at `127.0.0.1:8000` as a reverse proxy, then `certbot --nginx`
+for a free SSL certificate. A VPS's disk is persistent by default, so
+there's no Render-style disk-mounting step — just make sure `DATA_DIR`
+points somewhere with actual disk space.
 
 ### Before going live, either way
-1. Set a persistent **`SECRET_KEY`** (see Configuration above).
-   ```bash
-   export SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
-   ```
+1. Set a persistent **`SECRET_KEY`** (see Configuration above) — done in
+   step 3 if you followed the Render walkthrough.
 2. Log in and change the default admin password if you haven't already.
-3. Serve over **HTTPS** — the admin login form sends a password over the
-   wire, so plain HTTP exposes it.
-4. Back up `negarit.db` periodically — it's the entire database (one file,
-   easy to copy/cron) — and `static/uploads/` for the media library.
-5. Don't commit `negarit.db` or `static/uploads/*` to git (already handled
-   by `.gitignore`) — each environment should generate its own DB and admin
-   password rather than sharing one.
+3. Confirm you're on **HTTPS** — the admin login form sends a password
+   over the wire.
+4. Back up `negarit.db` and `uploads/` periodically regardless of host —
+   Render snapshots the persistent disk daily, but a second backup never hurts.
 
 ## Troubleshooting
 
