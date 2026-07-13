@@ -16,7 +16,7 @@
     <article class="card">
       {% if art['image_filename'] %}
       <a href="{{ url_for('article', slug=art['slug']) }}" class="card__image">
-        <img src="{{ url_for('static', filename='uploads/' + art['image_filename']) }}" alt="{{ art['title'] }}" loading="lazy">
+        <img src="{{ url_for('serve_upload', filename=art['image_filename']) }}" alt="{{ art['title'] }}" loading="lazy">
       </a>
       {% endif %}
       <div class="card__body">
