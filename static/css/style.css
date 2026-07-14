@@ -149,11 +149,11 @@ main { display: block; padding-bottom: 64px; }
 
 .masthead__brand { display: flex; align-items: center; gap: 12px; }
 
-.masthead__logo {
+.masthead__mark {
   display: block;
-  height: auto;
-  max-height: 52px;
-  width: auto;
+  height: 46px;
+  width: 46px;
+  flex-shrink: 0;
 }
 
 .masthead__title {

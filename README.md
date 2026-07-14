@@ -1,4 +1,4 @@
-# Negarit Business News
+# Negarit Business Review
 
 A Flask + SQLite news site with an admin panel for posting articles.
 Server-rendered HTML/CSS (Jinja2 templates), no JS framework, single SQLite
@@ -59,7 +59,7 @@ or delete them from the dashboard). The terminal will print something like:
 
 ```
 ============================================================
-  Negarit Business News — first-time setup complete
+  Negarit Business Review — first-time setup complete
   Admin login URL : /admin/login
   Admin username  : admin
   Admin password  : Xk9pQ2mZnR8

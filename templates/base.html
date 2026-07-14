@@ -15,7 +15,9 @@
 <header class="masthead">
   <div class="wrap masthead__inner">
     <a href="{{ url_for('index') }}" class="masthead__brand">
-      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ site_name }}" class="masthead__logo">
+      <img src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="" class="masthead__mark">
+      <span class="masthead__title">NEGARIT</span>
+      <span class="masthead__subtitle">BUSINESS&nbsp;REVIEW</span>
     </a>
     <div class="masthead__meta">
       <span class="masthead__date">{{ current_year }}</span>
@@ -69,7 +71,7 @@
   <div class="wrap site-footer__inner">
     <div class="site-footer__brand">
       <span class="masthead__title masthead__title--footer">NEGARIT</span>
-      <p>Business news, markets, and policy coverage.</p>
+      <p>Navigating Business Dynamics.</p>
     </div>
     <div class="site-footer__links">
       <a href="{{ url_for('index') }}">Home</a>

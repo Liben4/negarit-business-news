@@ -1,5 +1,5 @@
 """
-Negarit Business News
+Negarit Business Review
 A small Flask + SQLite news site with an admin panel for posting articles.
 
 Run locally:
@@ -53,7 +53,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-SITE_NAME = "Negarit Business News"
+SITE_NAME = "Negarit Business Review"
 
 # The "Scheduled" datetime field in the admin form has no timezone of its
 # own (browsers send plain "YYYY-MM-DDTHH:MM"). We interpret that value as
