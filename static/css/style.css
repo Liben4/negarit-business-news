@@ -147,7 +147,14 @@ main { display: block; padding-bottom: 64px; }
   gap: 8px;
 }
 
-.masthead__brand { display: flex; align-items: baseline; gap: 12px; }
+.masthead__brand { display: flex; align-items: center; gap: 12px; }
+
+.masthead__logo {
+  display: block;
+  height: auto;
+  max-height: 52px;
+  width: auto;
+}
 
 .masthead__title {
   font-family: var(--font-display);
