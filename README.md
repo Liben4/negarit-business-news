@@ -9,9 +9,9 @@ file for storage.
 **Sprint 1 — Admin fixes:** done (login, session management, logout, password change).
 **Sprint 2 — CMS:** done (dashboard stats, full article CRUD, scheduled
 publishing, drafts/published, image upload + media library).
-**Sprint 3 — Site enhancements:** not started (featured section is already
-in from Sprint 2's base; ticker, search, most-read, newsletter signup still
-open).
+**Sprint 3 — Site enhancements:** in progress. Done: featured section,
+search, dark mode, homepage animation (tilt + scroll-reveal). Still open:
+breaking news ticker, most-read articles, newsletter signup.
 **Sprint 4 — Production readiness:** in progress (Render deploy guide below,
 including the persistent-storage setup it needs; domain/HTTPS covered in
 the same walkthrough; SEO and analytics still open).
@@ -138,6 +138,26 @@ locally too if you use `python-dotenv`, not included by default):
 - **About/Contact copy**: currently placeholder text — edit directly in
   `templates/about.html` and `templates/contact.html`.
 - **Site name**: `SITE_NAME` near the top of `app.py`.
+
+## Front-end features
+
+- **Dark mode**: toggle button in the masthead. Preference is saved in
+  the visitor's browser (`localStorage`), falling back to their OS
+  setting if they haven't chosen one yet. Every color in the site is a
+  CSS variable with a light and dark value defined in
+  `static/css/style.css` (`:root` for light, `html[data-theme="dark"]`
+  for dark) — the footer and admin bar intentionally stay the same dark
+  navy in both themes (`--deep-surface`), everything else adapts.
+- **Search**: box in the top nav, searches published article
+  titles/summaries/content (`/search?q=...` in `app.py`). Simple
+  SQL `LIKE` matching — fine at this scale; if the article count grows
+  into the thousands, SQLite's FTS5 full-text search would be a
+  worthwhile upgrade for better ranking.
+- **Homepage animation**: the featured story image tilts in 3D following
+  the cursor, and the "Latest" cards fade/rise into view as you scroll.
+  Both live in `static/js/main.js` and respect
+  `prefers-reduced-motion`. Tune the tilt's intensity via the `strength`
+  variable in `heroTilt()`.
 
 ## Deploying (Render)
 
@@ -279,10 +299,9 @@ git push -u origin main
 
 ## Possible next steps
 
-Sprint 3 (featured section is already done): breaking news ticker, search,
-most-read articles (needs view tracking), newsletter signup (needs an email
-provider — Mailchimp/ConvertKit/etc. — since sending real email isn't
-configured here). Sprint 4: Render deployment, custom domain, HTTPS, SEO
-(meta tags, sitemap.xml, robots.txt), Google Analytics/Search Console.
-Also open: category management UI, a rich-text/WYSIWYG editor for article
-content, image resizing on upload.
+Sprint 3: breaking news ticker, most-read articles (needs view tracking),
+newsletter signup (needs an email provider — Mailchimp/ConvertKit/etc. —
+since sending real email isn't configured here). Sprint 4: Render
+deployment, custom domain, HTTPS, SEO (meta tags, sitemap.xml, robots.txt),
+Google Analytics/Search Console. Also open: category management UI, a
+rich-text/WYSIWYG editor for article content, image resizing on upload.
