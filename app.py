@@ -585,6 +585,47 @@ def article(slug):
     return render_template("article.html", article=art, related=related)
 
 
+@app.route("/search")
+def search():
+    query = request.args.get("q", "").strip()
+    db = get_db()
+
+    if not query:
+        return render_template("search.html", query="", articles=[], total=0,
+                                page=1, has_next=False, has_prev=False)
+
+    page = max(request.args.get("page", 1, type=int), 1)
+    offset = (page - 1) * ARTICLES_PER_PAGE
+
+    # Escape LIKE's own wildcard characters in the user's input so a
+    # search for e.g. "50% growth" doesn't get treated as a wildcard.
+    escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    like_pattern = f"%{escaped}%"
+
+    total = db.execute(
+        """SELECT COUNT(*) FROM articles
+           WHERE status = 'published' AND
+           (title LIKE ? ESCAPE '\\' OR summary LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\')""",
+        (like_pattern, like_pattern, like_pattern),
+    ).fetchone()[0]
+
+    articles = db.execute(
+        """SELECT articles.*, categories.name AS category_name, categories.slug AS category_slug
+           FROM articles LEFT JOIN categories ON articles.category_id = categories.id
+           WHERE articles.status = 'published' AND
+           (articles.title LIKE ? ESCAPE '\\' OR articles.summary LIKE ? ESCAPE '\\' OR articles.content LIKE ? ESCAPE '\\')
+           ORDER BY CASE WHEN articles.title LIKE ? ESCAPE '\\' THEN 0 ELSE 1 END, articles.created_at DESC
+           LIMIT ? OFFSET ?""",
+        (like_pattern, like_pattern, like_pattern, like_pattern, ARTICLES_PER_PAGE, offset),
+    ).fetchall()
+
+    has_next = offset + ARTICLES_PER_PAGE < total
+    has_prev = page > 1
+
+    return render_template("search.html", query=query, articles=articles, total=total,
+                            page=page, has_next=has_next, has_prev=has_prev)
+
+
 @app.route("/about")
 def about():
     return render_template("about.html")

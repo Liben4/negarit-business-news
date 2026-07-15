@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pulse, eyebrow %}
+
+{% block title %}{% if query %}"{{ query }}" — Search{% else %}Search{% endif %} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<section class="wrap category-header">
+  {{ eyebrow('Search') }}
+  {% if query %}
+  <h1>Results for &ldquo;{{ query }}&rdquo;</h1>
+  <p class="search-count">{{ total }} article{{ '' if total == 1 else 's' }} found</p>
+  {% else %}
+  <h1>Search</h1>
+  {% endif %}
+</section>
+
+<section class="wrap latest">
+  {% if not query %}
+  <div class="empty-state">
+    <h2>Type something to search</h2>
+    <p>Search looks across article titles, summaries, and full text.</p>
+  </div>
+
+  {% elif articles %}
+  <div class="card-grid">
+    {% for art in articles %}
+    <article class="card">
+      {% if art['image_filename'] %}
+      <a href="{{ url_for('article', slug=art['slug']) }}" class="card__image">
+        <img src="{{ url_for('serve_upload', filename=art['image_filename']) }}" alt="{{ art['title'] }}" loading="lazy">
+      </a>
+      {% endif %}
+      <div class="card__body">
+        {{ eyebrow(art['category_name'] or 'News', url_for('category', slug=art['category_slug']) if art['category_slug'] else None) }}
+        <h3 class="card__title"><a href="{{ url_for('article', slug=art['slug']) }}">{{ art['title'] }}</a></h3>
+        <p class="card__summary">{{ art['summary'] }}</p>
+        <div class="byline byline--small">
+          <span>{{ art['author'] }}</span>
+          <span class="byline__dot">&middot;</span>
+          <span>{{ art['created_at']|format_date }}</span>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+
+  {% if has_prev or has_next %}
+  <nav class="pagination">
+    {% if has_prev %}
+    <a href="{{ url_for('search', q=query, page=page-1) }}" class="pagination__link">&larr; Newer</a>
+    {% endif %}
+    {% if has_next %}
+    <a href="{{ url_for('search', q=query, page=page+1) }}" class="pagination__link pagination__link--next">Older &rarr;</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-state">
+    <h2>No results for &ldquo;{{ query }}&rdquo;</h2>
+    <p>Try a different word, or browse sections from the menu above.</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
