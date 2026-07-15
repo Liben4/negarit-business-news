@@ -468,7 +468,12 @@ html[data-theme="dark"] .theme-toggle__icon--moon { display: block; }
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-card);
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: box-shadow 0.35s ease;
 }
+
+.hero__image:hover { box-shadow: var(--shadow-card-hover); }
 
 .hero__image img {
   width: 100%;
@@ -511,6 +516,14 @@ html[data-theme="dark"] .theme-toggle__icon--moon { display: block; }
 }
 
 .card:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-2px); }
+
+.js .reveal {
+  opacity: 0;
+  translate: 0 28px;
+  transition: opacity 0.6s ease, translate 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.is-visible { opacity: 1; translate: 0 0; }
 
 .card__image { display: block; overflow: hidden; }
 
