@@ -7,6 +7,7 @@
    ========================================================================= */
 
 :root {
+  /* Theme-adaptive: these flip in dark mode */
   --ink-navy:      #10263D;
   --brand-blue:    #1D4E7E;
   --brand-blue-dk: #163E66;
@@ -17,6 +18,21 @@
   --ink-text:      #1B2430;
   --slate:         #5C6B7A;
   --hairline:      #D9E1E8;
+  --shadow-card:       0 1px 2px rgba(16,38,61,0.06), 0 6px 16px rgba(16,38,61,0.05);
+  --shadow-card-hover: 0 4px 10px rgba(16,38,61,0.08), 0 14px 28px rgba(16,38,61,0.10);
+
+  /* Semantic state colors: also theme-adaptive */
+  --success-bg: #E9F5EC; --success-text: #1E6B34; --success-border: #C6E6CD;
+  --error-bg:   #FBEBE6; --error-text:   #A23E12; --error-border:   #F2CDBC;
+  --warn-bg:    #FCEFE1; --warn-border:  #F0CDA0;
+  --info-bg:    #E7EEF7; --info-border:  #C3D5EA;
+  --neutral-bg: #F0EEE9; --neutral-text: #7A6A4A;
+
+  /* Fixed: footer/admin-subnav are always this dark navy regardless of
+     site theme, so these never change in the dark override below */
+  --deep-surface: #10263D;
+  --deep-surface-text: #E4EAF0;
+  --deep-surface-text-muted: #93A4B5;
 
   --radius-sm: 4px;
   --radius: 6px;
@@ -26,10 +42,31 @@
   --font-body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
 
-  --shadow-card: 0 1px 2px rgba(16,38,61,0.06), 0 6px 16px rgba(16,38,61,0.05);
-  --shadow-card-hover: 0 4px 10px rgba(16,38,61,0.08), 0 14px 28px rgba(16,38,61,0.10);
-
   --max-width: 1120px;
+}
+
+/* Dark theme — same token names, values re-tuned so contrast still works.
+   Applied via [data-theme="dark"] on <html>, set before first paint by
+   the inline script in base.html to avoid a flash of the wrong theme. */
+html[data-theme="dark"] {
+  --ink-navy:      #E7ECF2;
+  --brand-blue:    #6FA3D8;
+  --brand-blue-dk: #8FBCE8;
+  --herald-orange: #E8823D;
+  --herald-orange-dk: #F2A868;
+  --paper:         #0C1826;
+  --surface:       #142333;
+  --ink-text:      #DCE3EA;
+  --slate:         #8FA0B3;
+  --hairline:      #26374B;
+  --shadow-card:       0 1px 2px rgba(0,0,0,0.3), 0 6px 16px rgba(0,0,0,0.25);
+  --shadow-card-hover: 0 4px 10px rgba(0,0,0,0.35), 0 14px 28px rgba(0,0,0,0.35);
+
+  --success-bg: #14301F; --success-text: #7CDBA0; --success-border: #21492E;
+  --error-bg:   #3A1B12; --error-text:   #F2977C; --error-border:   #5C2C1E;
+  --warn-bg:    #3B2712; --warn-border:  #5C3E1D;
+  --info-bg:    #172A3E; --info-border:  #294863;
+  --neutral-bg: #262320; --neutral-text: #B3A28A;
 }
 
 /* =========================================================================
@@ -38,7 +75,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; }
 
 body {
   margin: 0;
@@ -48,6 +86,13 @@ body {
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.masthead, .topnav, .admin-subnav, .site-footer, .card, .stat, .auth-card,
+.table-wrap, .article-form, .media-item, .upload-bar,
+.field input, .field select, .field textarea {
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
 img { max-width: 100%; display: block; }
@@ -70,7 +115,7 @@ button { font-family: inherit; }
 
 code {
   font-family: var(--font-mono);
-  background: rgba(16,38,61,0.06);
+  background: rgba(128,140,155,0.16);
   padding: 0.1em 0.4em;
   border-radius: var(--radius-sm);
   font-size: 0.9em;
@@ -164,7 +209,7 @@ main { display: block; padding-bottom: 64px; }
   color: var(--ink-navy);
 }
 
-.masthead__title--footer { color: var(--paper); font-size: 1.6rem; }
+.masthead__title--footer { color: var(--deep-surface-text); font-size: 1.6rem; }
 
 .masthead__subtitle {
   font-family: var(--font-mono);
@@ -175,15 +220,42 @@ main { display: block; padding-bottom: 64px; }
 }
 
 .masthead__meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   font-family: var(--font-mono);
   font-size: 0.78rem;
   color: var(--slate);
   align-self: flex-end;
 }
 
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--slate);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.theme-toggle:hover, .theme-toggle:focus-visible {
+  color: var(--herald-orange-dk);
+  border-color: var(--herald-orange);
+}
+
+.theme-toggle__icon--moon { display: none; }
+html[data-theme="dark"] .theme-toggle__icon--sun { display: none; }
+html[data-theme="dark"] .theme-toggle__icon--moon { display: block; }
+
 .masthead__rule {
-  border-top: 3px solid var(--ink-navy);
-  border-bottom: 1px solid var(--ink-navy);
+  border-top: 3px solid var(--deep-surface);
+  border-bottom: 1px solid var(--deep-surface);
   height: 5px;
 }
 
@@ -282,7 +354,7 @@ main { display: block; padding-bottom: 64px; }
    Admin sub-navigation (shown site-wide while logged in)
    ========================================================================= */
 
-.admin-subnav { background: var(--ink-navy); }
+.admin-subnav { background: var(--deep-surface); }
 
 .admin-subnav__inner {
   display: flex;
@@ -327,8 +399,8 @@ main { display: block; padding-bottom: 64px; }
   border: 1px solid transparent;
 }
 
-.flash--success { background: #E9F5EC; color: #1E6B34; border-color: #C6E6CD; }
-.flash--error   { background: #FBEBE6; color: #A23E12; border-color: #F2CDBC; }
+.flash--success { background: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
+.flash--error   { background: var(--error-bg); color: var(--error-text); border-color: var(--error-border); }
 
 /* =========================================================================
    Hero / featured story
@@ -516,8 +588,8 @@ main { display: block; padding-bottom: 64px; }
 .article__body a:hover { color: var(--herald-orange-dk); }
 
 .draft-banner {
-  background: #FCEFE1;
-  border: 1px solid #F0CDA0;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
   color: var(--herald-orange-dk);
   font-family: var(--font-mono);
   font-size: 0.82rem;
@@ -527,8 +599,8 @@ main { display: block; padding-bottom: 64px; }
 }
 
 .draft-banner--scheduled {
-  background: #E7EEF7;
-  border-color: #C3D5EA;
+  background: var(--info-bg);
+  border-color: var(--info-border);
   color: var(--brand-blue-dk);
 }
 
@@ -580,8 +652,8 @@ main { display: block; padding-bottom: 64px; }
 .btn--ghost { background: transparent; color: var(--ink-navy); border-color: var(--hairline); }
 .btn--ghost:hover, .btn--ghost:focus-visible { border-color: var(--brand-blue); color: var(--brand-blue); }
 
-.btn--danger { background: transparent; color: #A23E12; border-color: #F2CDBC; }
-.btn--danger:hover, .btn--danger:focus-visible { background: #FBEBE6; }
+.btn--danger { background: transparent; color: var(--error-text); border-color: var(--error-border); }
+.btn--danger:hover, .btn--danger:focus-visible { background: var(--error-bg); }
 
 .btn--small { padding: 7px 12px; font-size: 0.8rem; }
 .btn--block { width: 100%; }
@@ -685,10 +757,10 @@ main { display: block; padding-bottom: 64px; }
   margin-left: 8px;
 }
 
-.tag--published { background: #E9F5EC; color: #1E6B34; margin-left: 0; }
-.tag--scheduled { background: #E7EEF7; color: var(--brand-blue-dk); margin-left: 0; }
-.tag--draft { background: #F0EEE9; color: #7A6A4A; margin-left: 0; }
-.tag--featured { background: #FCEFE1; color: var(--herald-orange-dk); }
+.tag--published { background: var(--success-bg); color: var(--success-text); margin-left: 0; }
+.tag--scheduled { background: var(--info-bg); color: var(--brand-blue-dk); margin-left: 0; }
+.tag--draft { background: var(--neutral-bg); color: var(--neutral-text); margin-left: 0; }
+.tag--featured { background: var(--warn-bg); color: var(--herald-orange-dk); }
 
 .admin-table__schedule-hint {
   font-family: var(--font-mono);
@@ -788,7 +860,7 @@ main { display: block; padding-bottom: 64px; }
    Footer
    ========================================================================= */
 
-.site-footer { background: var(--ink-navy); color: #C9D4DF; margin-top: 40px; }
+.site-footer { background: var(--deep-surface); color: var(--deep-surface-text-muted); margin-top: 40px; }
 
 .site-footer__inner {
   display: flex;
@@ -798,10 +870,10 @@ main { display: block; padding-bottom: 64px; }
   padding: 44px 24px 24px;
 }
 
-.site-footer__brand p { color: #93A4B5; font-size: 0.9rem; max-width: 32ch; }
+.site-footer__brand p { color: var(--deep-surface-text-muted); font-size: 0.9rem; max-width: 32ch; }
 
 .site-footer__links { display: flex; gap: 20px; flex-wrap: wrap; align-self: flex-start; }
-.site-footer__links a { font-size: 0.88rem; font-weight: 600; color: #C9D4DF; }
+.site-footer__links a { font-size: 0.88rem; font-weight: 600; color: var(--deep-surface-text); }
 .site-footer__links a:hover { color: var(--herald-orange); }
 
 .site-footer__bottom {
@@ -809,7 +881,7 @@ main { display: block; padding-bottom: 64px; }
   padding: 16px 24px 28px;
   font-family: var(--font-mono);
   font-size: 0.76rem;
-  color: #7C8DA0;
+  color: var(--deep-surface-text-muted);
 }
 
 /* =========================================================================
