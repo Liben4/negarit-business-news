@@ -545,31 +545,33 @@ def serve_upload(filename):
 @app.route("/")
 def index():
     db = get_db()
-    featured = db.execute(
+    featured_articles = db.execute(
         """SELECT articles.*, categories.name AS category_name, categories.slug AS category_slug
            FROM articles LEFT JOIN categories ON articles.category_id = categories.id
            WHERE articles.status = 'published' AND articles.featured = 1
-           ORDER BY articles.created_at DESC LIMIT 1"""
-    ).fetchone()
+           ORDER BY articles.updated_at DESC LIMIT 5"""
+    ).fetchall()
 
-    if featured is None:
-        featured = db.execute(
+    if not featured_articles:
+        fallback = db.execute(
             """SELECT articles.*, categories.name AS category_name, categories.slug AS category_slug
                FROM articles LEFT JOIN categories ON articles.category_id = categories.id
                WHERE articles.status = 'published'
                ORDER BY articles.created_at DESC LIMIT 1"""
         ).fetchone()
+        featured_articles = [fallback] if fallback else []
 
-    exclude_id = featured["id"] if featured else -1
+    exclude_ids = [a["id"] for a in featured_articles] or [-1]
+    placeholders = ",".join("?" * len(exclude_ids))
     latest = db.execute(
-        """SELECT articles.*, categories.name AS category_name, categories.slug AS category_slug
+        f"""SELECT articles.*, categories.name AS category_name, categories.slug AS category_slug
            FROM articles LEFT JOIN categories ON articles.category_id = categories.id
-           WHERE articles.status = 'published' AND articles.id != ?
+           WHERE articles.status = 'published' AND articles.id NOT IN ({placeholders})
            ORDER BY articles.created_at DESC LIMIT 8""",
-        (exclude_id,),
+        exclude_ids,
     ).fetchall()
 
-    return render_template("index.html", featured=featured, latest=latest)
+    return render_template("index.html", featured_articles=featured_articles, latest=latest)
 
 
 @app.route("/category/<slug>")
@@ -918,9 +920,6 @@ def admin_new_article():
         author_avatar = save_upload(request.files.get("author_avatar"), db)
         now = datetime.utcnow().isoformat()
 
-        if featured:
-            db.execute("UPDATE articles SET featured = 0")
-
         db.execute(
             """INSERT INTO articles
                (title, slug, summary, content, category_id, image_filename,
@@ -982,9 +981,6 @@ def admin_edit_article(article_id):
         author_avatar = save_upload(request.files.get("author_avatar"), db) or art["author_avatar"]
 
         now = datetime.utcnow().isoformat()
-
-        if featured:
-            db.execute("UPDATE articles SET featured = 0 WHERE id != ?", (article_id,))
 
         db.execute(
             """UPDATE articles SET title=?, slug=?, summary=?, content=?, category_id=?,

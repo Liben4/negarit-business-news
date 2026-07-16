@@ -439,13 +439,62 @@ html[data-theme="dark"] .theme-toggle__icon--moon { display: block; }
    Hero / featured story
    ========================================================================= */
 
+.hero-slider { padding: 0; }
+.hero-slider__track { position: relative; }
+
 .hero {
-  display: flex;
+  display: none;
   flex-wrap: wrap;
   gap: 40px;
-  padding: 48px 24px 40px;
+  padding: 48px 24px 24px;
   align-items: center;
+  animation: hero-fade-in 0.4s ease;
 }
+
+.hero--active { display: flex; }
+
+@keyframes hero-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.hero-slider__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding-bottom: 28px;
+}
+
+.hero-slider__arrow {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  background: transparent;
+  color: var(--ink-navy);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.hero-slider__arrow:hover, .hero-slider__arrow:focus-visible { border-color: var(--herald-orange); color: var(--herald-orange-dk); }
+
+.hero-slider__dots { display: flex; gap: 8px; }
+
+.hero-slider__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: var(--hairline);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.hero-slider__dot--active { background: var(--herald-orange); transform: scale(1.3); }
+.hero-slider__dot:hover { background: var(--herald-orange); }
 
 .hero__text { flex: 1 1 460px; }
 
