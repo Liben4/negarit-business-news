@@ -115,6 +115,7 @@ CREATE TABLE IF NOT EXISTS articles (
     tags           TEXT NOT NULL DEFAULT '',
     claps          INTEGER NOT NULL DEFAULT 0,
     breaking       INTEGER NOT NULL DEFAULT 0,
+    editors_pick   INTEGER NOT NULL DEFAULT 0,
     status         TEXT NOT NULL DEFAULT 'published',
     featured       INTEGER NOT NULL DEFAULT 0,
     publish_at     TEXT,
@@ -240,6 +241,8 @@ def migrate_db(conn):
         conn.execute("ALTER TABLE articles ADD COLUMN claps INTEGER NOT NULL DEFAULT 0")
     if "breaking" not in existing_cols:
         conn.execute("ALTER TABLE articles ADD COLUMN breaking INTEGER NOT NULL DEFAULT 0")
+    if "editors_pick" not in existing_cols:
+        conn.execute("ALTER TABLE articles ADD COLUMN editors_pick INTEGER NOT NULL DEFAULT 0")
     conn.commit()
 
 
@@ -580,7 +583,29 @@ def index():
         exclude_ids,
     ).fetchall()
 
-    return render_template("index.html", featured_articles=featured_articles, latest=latest)
+    editors_picks = db.execute(
+        """SELECT articles.*, categories.name AS category_name, categories.slug AS category_slug
+           FROM articles LEFT JOIN categories ON articles.category_id = categories.id
+           WHERE articles.status = 'published' AND articles.editors_pick = 1
+           ORDER BY articles.updated_at DESC LIMIT 4"""
+    ).fetchall()
+
+    # "Today" means today in SITE_TZ, not the server's own timezone —
+    # same reasoning as scheduled publishing.
+    now_local = datetime.now(timezone.utc).astimezone(SITE_TZ)
+    today_start_local = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start_utc = today_start_local.astimezone(timezone.utc).replace(tzinfo=None).isoformat()
+
+    highlights = db.execute(
+        """SELECT articles.*, categories.name AS category_name, categories.slug AS category_slug
+           FROM articles LEFT JOIN categories ON articles.category_id = categories.id
+           WHERE articles.status = 'published' AND articles.created_at >= ?
+           ORDER BY articles.created_at DESC LIMIT 6""",
+        (today_start_utc,),
+    ).fetchall()
+
+    return render_template("index.html", featured_articles=featured_articles, latest=latest,
+                            editors_picks=editors_picks, highlights=highlights)
 
 
 @app.route("/category/<slug>")
@@ -910,6 +935,7 @@ def admin_new_article():
             status = "published"
         featured = 1 if request.form.get("featured") == "on" else 0
         breaking = 1 if request.form.get("breaking") == "on" else 0
+        editors_pick = 1 if request.form.get("editors_pick") == "on" else 0
 
         if not title or not content:
             flash("Title and content are required.", "error")
@@ -933,11 +959,11 @@ def admin_new_article():
         db.execute(
             """INSERT INTO articles
                (title, slug, summary, content, category_id, image_filename,
-                author, author_bio, author_avatar, tags, status, featured, breaking,
+                author, author_bio, author_avatar, tags, status, featured, breaking, editors_pick,
                 publish_at, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (title, slug, summary, content, category_id, image_filename,
-             author, author_bio, author_avatar, tags, status, featured, breaking,
+             author, author_bio, author_avatar, tags, status, featured, breaking, editors_pick,
              publish_at, now, now),
         )
         db.commit()
@@ -972,6 +998,7 @@ def admin_edit_article(article_id):
             status = "published"
         featured = 1 if request.form.get("featured") == "on" else 0
         breaking = 1 if request.form.get("breaking") == "on" else 0
+        editors_pick = 1 if request.form.get("editors_pick") == "on" else 0
 
         if not title or not content:
             flash("Title and content are required.", "error")
@@ -996,10 +1023,10 @@ def admin_edit_article(article_id):
         db.execute(
             """UPDATE articles SET title=?, slug=?, summary=?, content=?, category_id=?,
                image_filename=?, author=?, author_bio=?, author_avatar=?, tags=?,
-               status=?, featured=?, breaking=?, publish_at=?, updated_at=?
+               status=?, featured=?, breaking=?, editors_pick=?, publish_at=?, updated_at=?
                WHERE id=?""",
             (title, slug, summary, content, category_id, image_filename,
-             author, author_bio, author_avatar, tags, status, featured, breaking, publish_at, now, article_id),
+             author, author_bio, author_avatar, tags, status, featured, breaking, editors_pick, publish_at, now, article_id),
         )
         db.commit()
         messages = {"published": "Article updated.", "draft": "Draft saved.",

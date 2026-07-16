@@ -121,6 +121,11 @@
         <input type="checkbox" name="breaking" {% if article and article['breaking'] %}checked{% endif %}>
         Mark as breaking news <em>(shows in the site-wide ticker)</em>
       </label>
+
+      <label class="checkbox checkbox--standalone">
+        <input type="checkbox" name="editors_pick" {% if article and article['editors_pick'] %}checked{% endif %}>
+        Editor's pick <em>(shows in the homepage Editor's Picks section)</em>
+      </label>
     </div>
 
     <div class="form-actions">

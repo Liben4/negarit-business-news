@@ -613,6 +613,37 @@ html[data-theme="dark"] .theme-toggle__icon--moon { display: block; }
 
 .latest { padding-top: 8px; }
 
+.highlights { padding-top: 8px; }
+
+.highlights__list {
+  list-style: none;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.highlights__item {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--hairline);
+  flex-wrap: wrap;
+}
+
+.highlights__item:last-child { border-bottom: none; }
+.highlights__item .eyebrow { margin-bottom: 0; flex-shrink: 0; width: 110px; }
+
+.highlights__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.02rem;
+  color: var(--ink-navy);
+  transition: color 0.15s ease;
+}
+
+.highlights__title:hover, .highlights__title:focus-visible { color: var(--brand-blue); }
+
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
