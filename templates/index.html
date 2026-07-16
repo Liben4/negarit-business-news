@@ -46,6 +46,51 @@
 </section>
 {% endif %}
 
+{% if highlights %}
+<section class="wrap highlights">
+  <div class="section-heading">
+    <h2>Today's Highlights</h2>
+  </div>
+  <ul class="highlights__list">
+    {% for art in highlights %}
+    <li class="highlights__item">
+      {{ eyebrow(art['category_name'] or 'News') }}
+      <a href="{{ url_for('article', slug=art['slug']) }}" class="highlights__title">{{ art['title'] }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if editors_picks %}
+<section class="wrap latest">
+  <div class="section-heading">
+    <h2>Editor's Picks</h2>
+  </div>
+  <div class="card-grid">
+    {% for art in editors_picks %}
+    <article class="card reveal" style="transition-delay: {{ (loop.index0 % 3) * 0.08 }}s">
+      {% if art['image_filename'] %}
+      <a href="{{ url_for('article', slug=art['slug']) }}" class="card__image">
+        <img src="{{ url_for('serve_upload', filename=art['image_filename']) }}" alt="{{ art['title'] }}" loading="lazy">
+      </a>
+      {% endif %}
+      <div class="card__body">
+        {{ eyebrow(art['category_name'] or 'News', url_for('category', slug=art['category_slug']) if art['category_slug'] else None) }}
+        <h3 class="card__title"><a href="{{ url_for('article', slug=art['slug']) }}">{{ art['title'] }}</a></h3>
+        <p class="card__summary">{{ art['summary'] }}</p>
+        <div class="byline byline--small">
+          <span>{{ art['author'] }}</span>
+          <span class="byline__dot">&middot;</span>
+          <span>{{ art['created_at']|format_date }}</span>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 {% if latest %}
 <section class="wrap latest">
   <div class="section-heading">
