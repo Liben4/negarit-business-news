@@ -9,9 +9,12 @@ file for storage.
 **Sprint 1 — Admin fixes:** done (login, session management, logout, password change).
 **Sprint 2 — CMS:** done (dashboard stats, full article CRUD, scheduled
 publishing, drafts/published, image upload + media library).
-**Sprint 3 — Site enhancements:** in progress. Done: featured section,
-search, dark mode, homepage animation (tilt + scroll-reveal). Still open:
-breaking news ticker, most-read articles, newsletter signup.
+**Sprint 3 — Site enhancements:** in progress. Done: featured section
+(now a slider), search, dark mode, homepage animation, breaking news
+ticker, editor's picks, today's highlights, full article reading
+experience (reading time/progress, tags, prev/next, share, claps, author
+bio). Still open: most-read articles (needs view tracking), newsletter
+signup.
 **Sprint 4 — Production readiness:** in progress (Render deploy guide below,
 including the persistent-storage setup it needs; domain/HTTPS covered in
 the same walkthrough; SEO and analytics still open).
@@ -163,6 +166,15 @@ locally too if you use `python-dotenv`, not included by default):
   (site-wide, chronological), a sticky share bar (X/LinkedIn/WhatsApp +
   copy link), a session-based clap counter, and an optional author bio
   card. All contained to the article page and the admin article form.
+- **Homepage sections**: the hero is now a slider (mark up to 5 articles
+  "Featured" — auto-rotates every 7s, pauses on hover, manual controls
+  always available). A site-wide breaking-news ticker appears below the
+  masthead whenever at least one article is marked "breaking" (not just
+  on the homepage). "Today's Highlights" auto-lists everything published
+  today (SITE_TZ's calendar day, not server time). "Editor's Picks" is a
+  manually curated section (new `editors_pick` flag). All three homepage
+  curation flags — featured, breaking, editors_pick — are checkboxes on
+  the article form.
 
 ## Deploying (Render)
 
@@ -304,9 +316,9 @@ git push -u origin main
 
 ## Possible next steps
 
-Sprint 3: breaking news ticker, most-read articles (needs view tracking),
-newsletter signup (needs an email provider — Mailchimp/ConvertKit/etc. —
-since sending real email isn't configured here). Sprint 4: Render
-deployment, custom domain, HTTPS, SEO (meta tags, sitemap.xml, robots.txt),
-Google Analytics/Search Console. Also open: category management UI, a
+Sprint 3: most-read articles (needs view tracking), newsletter signup
+(needs an email provider — Mailchimp/ConvertKit/etc. — since sending real
+email isn't configured here). Sprint 4: Render deployment, custom domain,
+HTTPS, SEO (meta tags, sitemap.xml, robots.txt), Google Analytics/Search
+Console. Also open: category management UI, a
 rich-text/WYSIWYG editor for article content, image resizing on upload.
