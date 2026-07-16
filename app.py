@@ -110,6 +110,10 @@ CREATE TABLE IF NOT EXISTS articles (
     category_id    INTEGER,
     image_filename TEXT,
     author         TEXT NOT NULL DEFAULT 'Staff Writer',
+    author_bio     TEXT,
+    author_avatar  TEXT,
+    tags           TEXT NOT NULL DEFAULT '',
+    claps          INTEGER NOT NULL DEFAULT 0,
     status         TEXT NOT NULL DEFAULT 'published',
     featured       INTEGER NOT NULL DEFAULT 0,
     publish_at     TEXT,
@@ -225,6 +229,14 @@ def migrate_db(conn):
     existing_cols = {row["name"] for row in conn.execute("PRAGMA table_info(articles)").fetchall()}
     if "publish_at" not in existing_cols:
         conn.execute("ALTER TABLE articles ADD COLUMN publish_at TEXT")
+    if "tags" not in existing_cols:
+        conn.execute("ALTER TABLE articles ADD COLUMN tags TEXT NOT NULL DEFAULT ''")
+    if "author_bio" not in existing_cols:
+        conn.execute("ALTER TABLE articles ADD COLUMN author_bio TEXT")
+    if "author_avatar" not in existing_cols:
+        conn.execute("ALTER TABLE articles ADD COLUMN author_avatar TEXT")
+    if "claps" not in existing_cols:
+        conn.execute("ALTER TABLE articles ADD COLUMN claps INTEGER NOT NULL DEFAULT 0")
     conn.commit()
 
 
@@ -285,6 +297,38 @@ def init_db():
 # ---------------------------------------------------------------------------
 # Small utilities
 # ---------------------------------------------------------------------------
+
+_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def reading_time_minutes(html_content):
+    """Strip HTML tags, count words, estimate minutes at ~200 wpm."""
+    text = _TAG_RE.sub(" ", html_content or "")
+    word_count = len(text.split())
+    return max(1, round(word_count / 200))
+
+
+def parse_tags(raw):
+    """Turn a comma-separated admin input into a clean, deduped list."""
+    if not raw:
+        return []
+    seen = []
+    for piece in raw.split(","):
+        tag = piece.strip().lower()
+        if tag and tag not in seen:
+            seen.append(tag)
+    return seen
+
+
+def format_tags_for_input(raw):
+    """Comma+space join for pre-filling the admin form's text input."""
+    return ", ".join(parse_tags(raw))
+
+
+app.jinja_env.filters["reading_time"] = reading_time_minutes
+app.jinja_env.filters["parse_tags"] = parse_tags
+app.jinja_env.filters["format_tags_for_input"] = format_tags_for_input
+
 
 def slugify(text):
     text = text.lower().strip()
@@ -460,7 +504,7 @@ def promote_scheduled_articles():
 def csrf_protect():
     if request.method == "POST":
         token = session.get("_csrf_token")
-        submitted = request.form.get("csrf_token")
+        submitted = request.form.get("csrf_token") or request.headers.get("X-CSRF-Token")
         if not token or not submitted or token != submitted:
             abort(403)
 
@@ -582,7 +626,72 @@ def article(slug):
         (art["category_id"], art["id"]),
     ).fetchall()
 
-    return render_template("article.html", article=art, related=related)
+    prev_article = db.execute(
+        """SELECT title, slug FROM articles
+           WHERE status = 'published' AND created_at < ?
+           ORDER BY created_at DESC LIMIT 1""",
+        (art["created_at"],),
+    ).fetchone()
+
+    next_article = db.execute(
+        """SELECT title, slug FROM articles
+           WHERE status = 'published' AND created_at > ?
+           ORDER BY created_at ASC LIMIT 1""",
+        (art["created_at"],),
+    ).fetchone()
+
+    already_clapped = bool(session.get(f"clapped_{art['id']}"))
+
+    return render_template(
+        "article.html", article=art, related=related,
+        prev_article=prev_article, next_article=next_article,
+        already_clapped=already_clapped,
+    )
+
+
+@app.route("/article/<slug>/clap", methods=["POST"])
+def clap_article(slug):
+    db = get_db()
+    art = db.execute("SELECT id, claps FROM articles WHERE slug = ? AND status = 'published'", (slug,)).fetchone()
+    if art is None:
+        abort(404)
+
+    session_key = f"clapped_{art['id']}"
+    if not session.get(session_key):
+        db.execute("UPDATE articles SET claps = claps + 1 WHERE id = ?", (art["id"],))
+        db.commit()
+        session[session_key] = True
+        claps = art["claps"] + 1
+    else:
+        claps = art["claps"]
+
+    return {"claps": claps, "already_clapped": True}
+
+
+@app.route("/tag/<tag>")
+def tag(tag):
+    db = get_db()
+    tag = tag.strip().lower()
+    all_published = db.execute(
+        """SELECT articles.*, categories.name AS category_name, categories.slug AS category_slug
+           FROM articles LEFT JOIN categories ON articles.category_id = categories.id
+           WHERE articles.status = 'published'
+           ORDER BY articles.created_at DESC"""
+    ).fetchall()
+
+    matching = [a for a in all_published if tag in parse_tags(a["tags"])]
+    if not matching:
+        abort(404)
+
+    page = max(request.args.get("page", 1, type=int), 1)
+    offset = (page - 1) * ARTICLES_PER_PAGE
+    total = len(matching)
+    articles = matching[offset:offset + ARTICLES_PER_PAGE]
+    has_next = offset + ARTICLES_PER_PAGE < total
+    has_prev = page > 1
+
+    return render_template("tag.html", tag=tag, articles=articles, total=total,
+                            page=page, has_next=has_next, has_prev=has_prev)
 
 
 @app.route("/search")
@@ -783,6 +892,8 @@ def admin_new_article():
         content = request.form.get("content", "").strip()
         category_id = request.form.get("category_id") or None
         author = request.form.get("author", "").strip() or "Staff Writer"
+        author_bio = request.form.get("author_bio", "").strip() or None
+        tags = ",".join(parse_tags(request.form.get("tags", "")))
         status = request.form.get("status")
         if status not in ("draft", "scheduled", "published"):
             status = "published"
@@ -804,6 +915,7 @@ def admin_new_article():
 
         slug = unique_article_slug(db, title)
         image_filename = resolve_image_selection(request, db)
+        author_avatar = save_upload(request.files.get("author_avatar"), db)
         now = datetime.utcnow().isoformat()
 
         if featured:
@@ -812,10 +924,12 @@ def admin_new_article():
         db.execute(
             """INSERT INTO articles
                (title, slug, summary, content, category_id, image_filename,
-                author, status, featured, publish_at, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                author, author_bio, author_avatar, tags, status, featured,
+                publish_at, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (title, slug, summary, content, category_id, image_filename,
-             author, status, featured, publish_at, now, now),
+             author, author_bio, author_avatar, tags, status, featured,
+             publish_at, now, now),
         )
         db.commit()
         messages = {"published": "Article published.", "draft": "Draft saved.",
@@ -842,6 +956,8 @@ def admin_edit_article(article_id):
         content = request.form.get("content", "").strip()
         category_id = request.form.get("category_id") or None
         author = request.form.get("author", "").strip() or "Staff Writer"
+        author_bio = request.form.get("author_bio", "").strip() or None
+        tags = ",".join(parse_tags(request.form.get("tags", "")))
         status = request.form.get("status")
         if status not in ("draft", "scheduled", "published"):
             status = "published"
@@ -863,6 +979,7 @@ def admin_edit_article(article_id):
 
         slug = unique_article_slug(db, title, ignore_id=article_id)
         image_filename = resolve_image_selection(request, db, current_filename=art["image_filename"])
+        author_avatar = save_upload(request.files.get("author_avatar"), db) or art["author_avatar"]
 
         now = datetime.utcnow().isoformat()
 
@@ -871,10 +988,11 @@ def admin_edit_article(article_id):
 
         db.execute(
             """UPDATE articles SET title=?, slug=?, summary=?, content=?, category_id=?,
-               image_filename=?, author=?, status=?, featured=?, publish_at=?, updated_at=?
+               image_filename=?, author=?, author_bio=?, author_avatar=?, tags=?,
+               status=?, featured=?, publish_at=?, updated_at=?
                WHERE id=?""",
             (title, slug, summary, content, category_id, image_filename,
-             author, status, featured, publish_at, now, article_id),
+             author, author_bio, author_avatar, tags, status, featured, publish_at, now, article_id),
         )
         db.commit()
         messages = {"published": "Article updated.", "draft": "Draft saved.",
