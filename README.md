@@ -158,6 +158,11 @@ locally too if you use `python-dotenv`, not included by default):
   Both live in `static/js/main.js` and respect
   `prefers-reduced-motion`. Tune the tilt's intensity via the `strength`
   variable in `heroTilt()`.
+- **Article reading experience**: reading time and a scroll progress bar,
+  tags (`/tag/<tag>`, clickable pills), previous/next navigation
+  (site-wide, chronological), a sticky share bar (X/LinkedIn/WhatsApp +
+  copy link), a session-based clap counter, and an optional author bio
+  card. All contained to the article page and the admin article form.
 
 ## Deploying (Render)
 
