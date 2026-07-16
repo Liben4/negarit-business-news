@@ -116,6 +116,11 @@
         <input type="checkbox" name="featured" {% if article and article['featured'] %}checked{% endif %}>
         Feature in the homepage hero slider <em>(shows up to 5 most recent)</em>
       </label>
+
+      <label class="checkbox checkbox--standalone">
+        <input type="checkbox" name="breaking" {% if article and article['breaking'] %}checked{% endif %}>
+        Mark as breaking news <em>(shows in the site-wide ticker)</em>
+      </label>
     </div>
 
     <div class="form-actions">
