@@ -2,6 +2,53 @@
    Every block below checks that its target elements exist before doing
    anything, so this file is safe to include on every page. */
 
+(function heroSlider() {
+  var root = document.getElementById('hero-slider');
+  if (!root) return;
+  var slides = root.querySelectorAll('.hero');
+  if (slides.length < 2) return;
+
+  var dots = root.querySelectorAll('.hero-slider__dot');
+  var prevBtn = document.getElementById('hero-prev');
+  var nextBtn = document.getElementById('hero-next');
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var current = 0;
+  var timer = null;
+
+  function show(index) {
+    current = (index + slides.length) % slides.length;
+    slides.forEach(function (s, i) { s.classList.toggle('hero--active', i === current); });
+    dots.forEach(function (d, i) { d.classList.toggle('hero-slider__dot--active', i === current); });
+  }
+
+  function next() { show(current + 1); }
+  function prev() { show(current - 1); }
+
+  function startAuto() {
+    if (reduceMotion) return; // manual navigation only
+    stopAuto();
+    timer = setInterval(next, 7000);
+  }
+  function stopAuto() {
+    if (timer) clearInterval(timer);
+    timer = null;
+  }
+
+  if (nextBtn) nextBtn.addEventListener('click', function () { next(); startAuto(); });
+  if (prevBtn) prevBtn.addEventListener('click', function () { prev(); startAuto(); });
+  dots.forEach(function (dot, i) {
+    dot.addEventListener('click', function () { show(i); startAuto(); });
+  });
+
+  root.addEventListener('mouseenter', stopAuto);
+  root.addEventListener('mouseleave', startAuto);
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) stopAuto(); else startAuto();
+  });
+
+  startAuto();
+})();
+
 (function themeToggle() {
   var toggle = document.getElementById('theme-toggle');
   if (!toggle) return;

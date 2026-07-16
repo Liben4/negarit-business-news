@@ -3,22 +3,40 @@
 
 {% block content %}
 
-{% if featured %}
-<section class="wrap hero">
-  <div class="hero__text">
-    {{ eyebrow(featured['category_name'] or 'News', url_for('category', slug=featured['category_slug']) if featured['category_slug'] else None) }}
-    <h1 class="hero__headline"><a href="{{ url_for('article', slug=featured['slug']) }}">{{ featured['title'] }}</a></h1>
-    <p class="hero__summary">{{ featured['summary'] }}</p>
-    <div class="byline">
-      <span>{{ featured['author'] }}</span>
-      <span class="byline__dot">&middot;</span>
-      <span>{{ featured['created_at']|format_date }}</span>
+{% if featured_articles %}
+<section class="wrap hero-slider" id="hero-slider">
+  <div class="hero-slider__track">
+    {% for featured in featured_articles %}
+    <div class="hero {{ 'hero--active' if loop.first }}" data-slide-index="{{ loop.index0 }}">
+      <div class="hero__text">
+        {{ eyebrow(featured['category_name'] or 'News', url_for('category', slug=featured['category_slug']) if featured['category_slug'] else None) }}
+        <h1 class="hero__headline"><a href="{{ url_for('article', slug=featured['slug']) }}">{{ featured['title'] }}</a></h1>
+        <p class="hero__summary">{{ featured['summary'] }}</p>
+        <div class="byline">
+          <span>{{ featured['author'] }}</span>
+          <span class="byline__dot">&middot;</span>
+          <span>{{ featured['created_at']|format_date }}</span>
+        </div>
+      </div>
+      {% if featured['image_filename'] %}
+      <a href="{{ url_for('article', slug=featured['slug']) }}" class="hero__image">
+        <img src="{{ url_for('serve_upload', filename=featured['image_filename']) }}" alt="{{ featured['title'] }}">
+      </a>
+      {% endif %}
     </div>
+    {% endfor %}
   </div>
-  {% if featured['image_filename'] %}
-  <a href="{{ url_for('article', slug=featured['slug']) }}" class="hero__image">
-    <img src="{{ url_for('serve_upload', filename=featured['image_filename']) }}" alt="{{ featured['title'] }}">
-  </a>
+
+  {% if featured_articles|length > 1 %}
+  <div class="hero-slider__controls wrap">
+    <button type="button" class="hero-slider__arrow" id="hero-prev" aria-label="Previous story">&larr;</button>
+    <div class="hero-slider__dots" id="hero-dots">
+      {% for featured in featured_articles %}
+      <button type="button" class="hero-slider__dot {{ 'hero-slider__dot--active' if loop.first }}" data-slide-index="{{ loop.index0 }}" aria-label="Go to story {{ loop.index }}"></button>
+      {% endfor %}
+    </div>
+    <button type="button" class="hero-slider__arrow" id="hero-next" aria-label="Next story">&rarr;</button>
+  </div>
   {% endif %}
 </section>
 {% else %}
