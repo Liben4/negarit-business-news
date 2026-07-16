@@ -71,6 +71,24 @@
   </nav>
 </header>
 
+{% if breaking_articles %}
+<div class="ticker">
+  <div class="wrap ticker__inner">
+    <span class="ticker__label">Breaking</span>
+    <div class="ticker__viewport">
+      <div class="ticker__track">
+        {% for item in breaking_articles %}
+        <a href="{{ url_for('article', slug=item['slug']) }}" class="ticker__item">{{ item['title'] }}</a>
+        {% endfor %}
+        {% for item in breaking_articles %}
+        <a href="{{ url_for('article', slug=item['slug']) }}" class="ticker__item" aria-hidden="true" tabindex="-1">{{ item['title'] }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% if is_admin %}
 <div class="admin-subnav">
   <div class="wrap admin-subnav__inner">
