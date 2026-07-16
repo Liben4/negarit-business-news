@@ -38,6 +38,28 @@
         <input type="text" name="author" placeholder="Staff Writer" value="{{ article['author'] if article else '' }}">
       </label>
 
+      <label class="field">
+        <span>Tags <em>(comma-separated)</em></span>
+        <input type="text" name="tags" placeholder="markets, coffee, exports" value="{{ article['tags']|format_tags_for_input if article else '' }}">
+      </label>
+
+      <label class="field field--wide">
+        <span>Author bio <em>(optional — shows an author card at the end of the article if filled in)</em></span>
+        <textarea name="author_bio" rows="2">{{ article['author_bio'] if article and article['author_bio'] else '' }}</textarea>
+      </label>
+
+      <label class="field">
+        <span>Author photo <em>(optional)</em></span>
+        <input type="file" name="author_avatar" accept="image/png,image/jpeg,image/webp,image/gif">
+      </label>
+
+      {% if mode == 'edit' and article['author_avatar'] %}
+      <div class="field current-image">
+        <span>Current author photo</span>
+        <img src="{{ url_for('serve_upload', filename=article['author_avatar']) }}" alt="">
+      </div>
+      {% endif %}
+
       <label class="field field--wide">
         <span>Summary <em>(shown on cards and at the top of the article)</em></span>
         <textarea name="summary" rows="2">{{ article['summary'] if article else '' }}</textarea>

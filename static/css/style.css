@@ -651,6 +651,177 @@ html[data-theme="dark"] .theme-toggle__icon--moon { display: block; }
 }
 
 /* =========================================================================
+   Reading progress bar
+   ========================================================================= */
+
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  background: var(--herald-orange);
+  z-index: 100;
+  transition: width 0.1s linear;
+}
+
+/* =========================================================================
+   Tags
+   ========================================================================= */
+
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 8px; }
+
+.tag-pill {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--brand-blue);
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  padding: 4px 10px;
+  border-radius: 999px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tag-pill:hover, .tag-pill:focus-visible { color: var(--herald-orange-dk); border-color: var(--herald-orange); }
+
+/* =========================================================================
+   Author bio card
+   ========================================================================= */
+
+.author-card {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin: 40px 0;
+}
+
+.author-card__avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.author-card__name { font-family: var(--font-display); font-weight: 600; color: var(--ink-navy); margin: 0 0 4px; }
+.author-card__bio { color: var(--slate); font-size: 0.92rem; margin: 0; }
+
+/* =========================================================================
+   Previous / next article navigation
+   ========================================================================= */
+
+.article-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--hairline);
+}
+
+.article-nav__link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  transition: border-color 0.15s ease;
+}
+
+.article-nav__link:hover, .article-nav__link:focus-visible { border-color: var(--brand-blue); }
+.article-nav__link--next { text-align: right; grid-column: 2; }
+
+.article-nav__label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--slate);
+}
+
+.article-nav__title { font-weight: 600; color: var(--ink-navy); font-size: 0.92rem; }
+
+/* =========================================================================
+   Sticky share + clap bar
+   ========================================================================= */
+
+.share-bar {
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--hairline);
+  margin-top: 40px;
+  box-shadow: 0 -4px 12px rgba(16,38,61,0.06);
+}
+
+.share-bar__inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 24px;
+  max-width: 760px;
+}
+
+.clap-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 7px 14px;
+  color: var(--slate);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.clap-button:hover:not(:disabled) { color: var(--herald-orange-dk); border-color: var(--herald-orange); }
+.clap-button--done { color: var(--herald-orange-dk); border-color: var(--herald-orange); background: var(--warn-bg); cursor: default; }
+.clap-button--bump { animation: clap-bump 0.35s ease; }
+
+@keyframes clap-bump {
+  0% { scale: 1; }
+  40% { scale: 1.18; }
+  100% { scale: 1; }
+}
+
+.share-bar__links { display: flex; align-items: center; gap: 8px; }
+
+.share-bar__label {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--slate);
+  margin-right: 4px;
+}
+
+.share-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  background: transparent;
+  color: var(--ink-text);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.share-link:hover, .share-link:focus-visible { color: var(--brand-blue); border-color: var(--brand-blue); }
+.share-link--copy.share-link--copied { color: var(--success-text); border-color: var(--success-border); }
+
+/* =========================================================================
    Empty states + 404
    ========================================================================= */
 
