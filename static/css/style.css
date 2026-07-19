@@ -1269,3 +1269,612 @@ html[data-theme="dark"] .theme-toggle__icon--moon { display: block; }
   .masthead__subtitle { display: none; }
   .admin-table__actions { flex-direction: column; align-items: flex-start; }
 }
+.ck-editor__editable_inline{
+
+min-height:550px;
+
+font-size:18px;
+
+line-height:1.8;
+
+}
+.ck-editor__editable_inline{
+
+min-height:550px;
+
+font-size:18px;
+
+line-height:1.8;
+
+}
+.ck-content{
+
+font-family:"Newsreader",serif;
+
+font-size:18px;
+
+line-height:1.8;
+
+}
+/* Upload Box */
+
+.upload-box{
+
+border:2px dashed #0B3D91;
+
+border-radius:12px;
+
+padding:40px;
+
+text-align:center;
+
+cursor:pointer;
+
+background:#fafafa;
+
+transition:.3s;
+
+}
+
+.upload-box:hover{
+
+background:#eef5ff;
+
+}
+
+.upload-box input{
+
+display:none;
+
+}
+
+.image-preview{
+
+display:none;
+
+margin-top:20px;
+
+max-width:350px;
+
+border-radius:10px;
+
+box-shadow:0 8px 20px rgba(0,0,0,.15);
+
+}
+.share-box{
+
+position:fixed;
+
+left:20px;
+
+top:40%;
+
+display:flex;
+
+flex-direction:column;
+
+gap:10px;
+
+z-index:999;
+
+}
+
+.share-box a{
+
+background:#003366;
+
+color:white;
+
+padding:12px;
+
+border-radius:50px;
+
+text-decoration:none;
+
+font-size:13px;
+
+transition:.3s;
+
+}
+
+.share-box a:hover{
+
+background:#ff9800;
+
+}
+/* ===========================
+   Reading Progress Bar
+=========================== */
+
+#progressBar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:0%;
+    height:5px;
+    background:linear-gradient(90deg,#003366,#00bcd4);
+    z-index:99999;
+    transition:width .1s linear;
+}
+/* ===========================
+   Social Footer
+=========================== */
+
+.social-footer{
+    margin-top:25px;
+}
+
+.social-footer h4{
+    color:#fff;
+    margin-bottom:15px;
+    font-size:18px;
+}
+
+.social-footer a{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    width:45px;
+    height:45px;
+
+    margin-right:10px;
+
+    border-radius:50%;
+
+    background:#1f2937;
+
+    color:#fff;
+
+    text-decoration:none;
+
+    font-size:20px;
+
+    transition:.35s;
+}
+
+.social-footer a:hover{
+    transform:translateY(-5px) scale(1.1);
+}
+
+/* Facebook */
+.social-footer a:nth-child(2):hover{
+    background:#1877F2;
+}
+
+/* X */
+.social-footer a:nth-child(3):hover{
+    background:#000;
+}
+
+/* LinkedIn */
+.social-footer a:nth-child(4):hover{
+    background:#0A66C2;
+}
+
+/* YouTube */
+.social-footer a:nth-child(5):hover{
+    background:#FF0000;
+}
+
+/* Telegram */
+.social-footer a:nth-child(6):hover{
+    background:#229ED9;
+}
+.hero{
+    display:none;
+}
+
+.hero.hero--active{
+    display:flex;
+}
+.search-form{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.search-input{
+    width:250px;
+    padding:11px 18px;
+    border:1px solid #ddd;
+    border-radius:30px;
+    outline:none;
+    transition:.3s;
+}
+
+.search-input:focus{
+    width:320px;
+    border-color:#0b3d91;
+    box-shadow:0 0 10px rgba(11,61,145,.2);
+}
+
+.search-btn{
+    background:#0b3d91;
+    color:white;
+    border:none;
+    padding:11px 22px;
+    border-radius:30px;
+    cursor:pointer;
+    font-weight:600;
+    transition:.3s;
+}
+
+.search-btn:hover{
+    background:#f4a300;
+    color:#000;
+    transform:translateY(-2px);
+}
+/* Share Box */
+
+.share-box{
+
+margin-top:60px;
+
+padding:35px;
+
+background:#f5f7fa;
+
+border-radius:12px;
+
+text-align:center;
+
+}
+
+.share-box h3{
+
+margin-bottom:20px;
+
+}
+
+.share-icons{
+
+display:flex;
+
+justify-content:center;
+
+flex-wrap:wrap;
+
+gap:15px;
+
+}
+
+.share-icons a{
+
+padding:12px 22px;
+
+border-radius:30px;
+
+color:white;
+
+text-decoration:none;
+
+font-weight:bold;
+
+transition:.3s;
+
+}
+
+.facebook{
+background:#1877F2;
+}
+
+.twitter{
+background:#000;
+}
+
+.linkedin{
+background:#0A66C2;
+}
+
+.telegram{
+background:#27A7E7;
+}
+
+.whatsapp{
+background:#25D366;
+}
+
+.share-icons a:hover{
+
+transform:translateY(-3px);
+
+opacity:.9;
+
+}
+.article {
+    display: block;
+    overflow: visible;
+}
+
+.latest {
+    position: static;
+    margin-top: 60px;
+    clear: both;
+}
+
+main {
+    display: block;
+    overflow: auto;
+}
+/* ===============================
+   SHARE ARTICLE
+================================ */
+
+.share-divider{
+    border:0;
+    border-top:1px solid rgba(255,255,255,.08);
+    margin:40px 0 22px;
+}
+
+.share-section{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:14px;
+    margin:30px 0;
+}
+
+.share-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:30px;
+    font-weight:700;
+    color:var(--text-color);
+    margin-bottom:5px;
+}
+
+.share-icons{
+    display:flex;
+    gap:16px;
+    margin-left:8px;
+}
+
+.share-btn{
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-decoration:none;
+    color:#ffffff;
+    font-size:20px;
+    transition:.3s ease;
+}
+
+.share-btn:hover{
+    transform:translateY(-4px) scale(1.08);
+}
+
+.facebook{
+    background:#1877F2;
+}
+
+.twitter{
+    background:#111;
+}
+
+.linkedin{
+    background:#0A66C2;
+}
+
+.telegram{
+    background:#2AABEE;
+}
+
+.whatsapp{
+    background:#25D366;
+}
+/* ===========================
+   Newsletter Footer
+=========================== */
+
+.newsletter-box{
+
+    margin-top:35px;
+    padding:25px;
+
+    background:#17375e;
+
+    border-radius:12px;
+
+    text-align:center;
+}
+
+.newsletter-box h3{
+
+    color:#fff;
+
+    margin-bottom:10px;
+
+    font-size:26px;
+}
+
+.newsletter-box p{
+
+    color:#d8d8d8;
+
+    margin-bottom:20px;
+
+    font-size:15px;
+}
+
+.newsletter-form{
+
+    display:flex;
+
+    justify-content:center;
+
+    gap:10px;
+
+    flex-wrap:wrap;
+}
+
+.newsletter-form input{
+
+    width:320px;
+
+    max-width:100%;
+
+    padding:14px;
+
+    border:none;
+
+    border-radius:8px;
+
+    font-size:15px;
+}
+
+.newsletter-form button{
+
+    background:#f47b20;
+
+    color:white;
+
+    border:none;
+
+    padding:14px 24px;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    font-weight:bold;
+
+    transition:.3s;
+}
+
+.newsletter-form button:hover{
+
+    background:#d86711;
+}
+/* Center the NEGARIT footer brand */
+.site-footer__brand {
+    grid-column: 1 / -1;
+    width: 100%;
+    text-align: center;
+}
+
+.site-footer__brand .masthead__brand {
+    justify-content: center;
+    width: 100%;
+}
+
+.site-footer__brand p {
+    max-width: none;
+    margin: 0 auto;
+    text-align: center;
+}
+/* =========================================================
+   Final footer alignment
+   ========================================================= */
+
+.site-footer__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 32px;
+    padding: 44px 24px 30px;
+}
+
+/* Brand and tagline */
+.site-footer__brand {
+    width: 100%;
+    text-align: center;
+}
+
+.site-footer__brand .masthead__brand {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.site-footer__brand p {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    text-align: center;
+}
+
+/* Navigation links */
+.site-footer__links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-self: auto;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 100%;
+    margin: 0;
+    text-align: center;
+}
+
+/* Follow Us section */
+.social-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin: 10px 0 0;
+    padding-top: 26px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.social-footer h4 {
+    width: 100%;
+    margin: 0 0 18px;
+    text-align: center;
+}
+
+/* Social icons */
+.social-footer__icons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    width: 100%;
+    margin: 0;
+}
+
+/* Prevent individual links from introducing extra margins */
+.social-footer__icons a {
+    margin: 0;
+}
+
+/* Mobile footer */
+@media (max-width: 720px) {
+    .site-footer__inner {
+        gap: 24px;
+        padding: 36px 20px 26px;
+    }
+
+    .site-footer__links {
+        justify-content: center;
+        gap: 14px 20px;
+    }
+
+    .social-footer__icons {
+        justify-content: center;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .site-footer__links {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+.social-icons-row {
+    display: flex;
+    justify-content: center; /* Centers the row horizontally */
+    align-items: center;     /* Aligns them perfectly in the middle vertically */
+    gap: 15px;               /* Adjust this number to add more or less space between icons */
+    margin-top: 10px;        /* Adds space between the "Follow Us" text and the icons */
+}

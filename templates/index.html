@@ -119,5 +119,32 @@
   </div>
 </section>
 {% endif %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
 
+    const slides = document.querySelectorAll(".hero");
+
+    if (slides.length <= 1) return;
+
+    let current = 0;
+
+    function showSlide(index) {
+        slides.forEach((slide) => {
+            slide.classList.remove("hero--active");
+            slide.style.display = "none";
+        });
+
+        slides[index].style.display = "flex";
+        slides[index].classList.add("hero--active");
+    }
+
+    showSlide(0);
+
+    setInterval(() => {
+        current = (current + 1) % slides.length;
+        showSlide(current);
+    }, 5000);
+
+});
+</script>
 {% endblock %}

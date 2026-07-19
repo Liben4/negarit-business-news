@@ -70,7 +70,58 @@
     {% endif %}
   </nav>
 </article>
+<article class="article-content">
+    <!-- Article content -->
+</article>
 
+<section class="share-article">
+    <hr class="share-divider">
+
+<div class="share-section">
+
+    <span class="share-title">
+        <i class="fas fa-share-alt"></i>
+        Share this article
+    </span>
+
+    <div class="share-icons">
+
+        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url }}"
+           target="_blank"
+           class="share-btn facebook">
+            <i class="fab fa-facebook-f"></i>
+        </a>
+
+        <a href="https://twitter.com/intent/tweet?url={{ request.url }}"
+           target="_blank"
+           class="share-btn twitter">
+            <i class="fab fa-x-twitter"></i>
+        </a>
+
+        <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ request.url }}"
+           target="_blank"
+           class="share-btn linkedin">
+            <i class="fab fa-linkedin-in"></i>
+        </a>
+
+        <a href="https://t.me/share/url?url={{ request.url }}"
+           target="_blank"
+           class="share-btn telegram">
+            <i class="fab fa-telegram-plane"></i>
+        </a>
+
+        <a href="https://wa.me/?text={{ request.url }}"
+           target="_blank"
+           class="share-btn whatsapp">
+            <i class="fab fa-whatsapp"></i>
+        </a>
+
+    </div>
+
+</div>
+
+<hr class="share-divider">
+</div>
 <div class="share-bar" data-article-slug="{{ article['slug'] }}">
   <div class="wrap share-bar__inner">
     <button type="button" class="clap-button {{ 'clap-button--done' if already_clapped }}" id="clap-button" {% if already_clapped %}disabled{% endif %}>
@@ -79,16 +130,6 @@
       </svg>
       <span id="clap-count">{{ article['claps'] }}</span>
     </button>
-    <div class="share-bar__links">
-      <span class="share-bar__label">Share</span>
-      <a href="https://twitter.com/intent/tweet?url={{ request.url|urlencode }}&text={{ article['title']|urlencode }}" target="_blank" rel="noopener noreferrer" class="share-link" aria-label="Share on X">X</a>
-      <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.url|urlencode }}" target="_blank" rel="noopener noreferrer" class="share-link" aria-label="Share on LinkedIn">in</a>
-      <a href="https://wa.me/?text={{ (article['title'] ~ ' ' ~ request.url)|urlencode }}" target="_blank" rel="noopener noreferrer" class="share-link" aria-label="Share on WhatsApp">WA</a>
-      <button type="button" class="share-link share-link--copy" id="copy-link-btn" aria-label="Copy link">Copy</button>
-    </div>
-  </div>
-</div>
-
 {% if related %}
 <section class="wrap latest">
   <div class="section-heading">

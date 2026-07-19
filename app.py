@@ -1067,6 +1067,23 @@ def not_found(e):
 # ---------------------------------------------------------------------------
 
 init_db()
+init_db()
+
+@app.route("/reset-admin")
+def reset_admin():
+    db = get_db()
+    db.execute(
+        "UPDATE admin_users SET password_hash = ? WHERE username = ?",
+        (generate_password_hash("Admin@123"), "admin"),
+    )
+    db.commit()
+    return "Admin password reset successfully!"
 
 if __name__ == "__main__":
     app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
+if __name__ == '__main__':
+    # host='0.0.0.0' allows external access via VS Code tunnels
+    # port=5000 matches your forwarded port
+    app.run(host='0.0.0.0', port=5000, debug=True)
