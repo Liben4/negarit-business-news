@@ -1878,3 +1878,58 @@ main {
     gap: 15px;               /* Adjust this number to add more or less space between icons */
     margin-top: 10px;        /* Adds space between the "Follow Us" text and the icons */
 }
+/* Flash Messages */
+.flash-stack{
+    max-width:700px;
+    margin:20px auto;
+}
+
+.flash{
+    padding:16px 20px;
+    border-radius:10px;
+    margin-bottom:15px;
+    font-weight:600;
+    text-align:center;
+    font-size:16px;
+    box-shadow:0 4px 12px rgba(0,0,0,.15);
+    animation:fadeIn .4s ease;
+}
+
+/* Success */
+.flash--success{
+    background:#d1fae5;
+    color:#065f46;
+    border-left:6px solid #10b981;
+}
+
+/* Error */
+.flash--error{
+    background:#fee2e2;
+    color:#991b1b;
+    border-left:6px solid #ef4444;
+}
+
+/* Warning */
+.flash--warning{
+    background:#1e02d3;
+    color:#92400e;
+    border-left:6px solid #f59e0b;
+}
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+        transform:translateY(-10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+/* Fade Out Animation */
+
+.flash.hide{
+    opacity:0;
+    transform:translateY(-15px);
+    transition:all .5s ease;
+}

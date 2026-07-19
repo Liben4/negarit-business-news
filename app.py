@@ -12,7 +12,6 @@ sample categories and articles, plus one admin account. The admin username
 and a randomly generated password are printed to the terminal ONCE — save
 that password immediately.
 """
-
 import os
 import re
 import sqlite3
@@ -770,7 +769,19 @@ def search():
     return render_template("search.html", query=query, articles=articles, total=total,
                             page=page, has_next=has_next, has_prev=has_prev)
 
-
+@app.route("/subscribe", methods=["POST"])
+def subscribe():
+    email = request.form.get("email")
+    if email:
+        print(f"========================================")
+        print(f"NEW NEWSLETTER SUBSCRIBER: {email}")
+        print(f"========================================")
+        
+        # Notice we added the 'newsletter' category here
+        flash("Thank you for subscribing to our newsletter!", "newsletter")
+        return redirect(url_for("index"))
+        
+    return redirect(url_for("index"))
 @app.route("/about")
 def about():
     return render_template("about.html")
@@ -779,7 +790,6 @@ def about():
 @app.route("/contact")
 def contact():
     return render_template("contact.html")
-
 
 # ---------------------------------------------------------------------------
 # Admin: auth
@@ -1078,12 +1088,5 @@ def reset_admin():
     )
     db.commit()
     return "Admin password reset successfully!"
-
 if __name__ == "__main__":
-    app.run(debug=True)
-if __name__ == "__main__":
-    app.run(debug=True)
-if __name__ == '__main__':
-    # host='0.0.0.0' allows external access via VS Code tunnels
-    # port=5000 matches your forwarded port
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

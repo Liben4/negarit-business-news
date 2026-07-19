@@ -118,7 +118,14 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
   {% if messages %}
   <div class="wrap flash-stack">
     {% for category, message in messages %}
-    <div class="flash flash--{{ category }}">{{ message }}</div>
+    <div class="flash flash--{{ category }}" id="flash-message">
+    {% if category == 'success' %}
+        ✅
+    {% elif category == 'error' %}
+        ❌
+    {% endif %}
+    {{ message }}
+</div>
     {% endfor %}
   </div>
   {% endif %}
@@ -170,27 +177,27 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
     </div>
 </div>
 <div class="newsletter-box">
-
     <h3>Subscribe to Our Newsletter</h3>
-
     <p>
         Get the latest business, technology and market news delivered directly to your inbox.
     </p>
 
     <form action="/subscribe" method="POST" class="newsletter-form">
-
-        <input
-            type="email"
-            name="email"
-            placeholder="Enter your email"
-            required
-        >
-
-        <button type="submit">
-            Subscribe
-        </button>
-
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="email" name="email" placeholder="Enter your email" required>
+        <button type="submit">Subscribe</button>
     </form>
+
+    <!-- STEP 2: PASTE THIS BLOCK RIGHT HERE -->
+    {% with messages = get_flashed_messages(category_filter=["newsletter"]) %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="newsletter-success-alert">
+             {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 </div>
   <div class="wrap site-footer__bottom">
     <span>&copy; {{ current_year }} {{ site_name }}. All rights reserved.</span>
@@ -227,9 +234,46 @@ window.addEventListener("scroll", function(){
     document.getElementById("progressBar").style.width = progress + "%";
 
 });
+<script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
 
+    const flashes = document.querySelectorAll(".flash");
+
+    flashes.forEach(function (flash) {
+
+        setTimeout(function () {
+
+            flash.classList.add("hide");
+
+            setTimeout(function () {
+                flash.remove();
+            }, 500);
+
+        }, 4000);
+
+    });
+
+});
 </script>
 </body>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const flashes = document.querySelectorAll(".flash");
+
+    flashes.forEach(function(flash) {
+        setTimeout(function () {
+            flash.style.transition = "opacity 0.5s ease";
+            flash.style.opacity = "0";
+
+            setTimeout(function () {
+                flash.remove();
+            }, 500);
+
+        }, 4000); // disappears after 4 seconds
+    });
+});
+</script>
 </html>
 <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
 </body>
