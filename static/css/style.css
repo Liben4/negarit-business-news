@@ -1815,33 +1815,54 @@ main {
 
 /* Follow Us section */
 .social-footer {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.social-footer .social-icons {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    margin: 10px 0 0;
-    padding-top: 26px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    text-align: center;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 15px;
 }
 
-.social-footer h4 {
-    width: 100%;
-    margin: 0 0 18px;
-    text-align: center;
-}
-
-/* Social icons */
-.social-footer__icons {
+.social-footer a {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 14px;
-    width: 100%;
-    margin: 0;
+    font-size: 24px;
+    color: #fff;
+    text-decoration: none;
+    transition: all .3s ease;
 }
 
+.social-footer a:hover {
+    transform: translateY(-5px) scale(1.08);
+}
+
+/* Brand colors */
+.social-footer .facebook {
+    background: #1877F2;
+}
+
+.social-footer .twitter {
+    background: #000000;
+}
+
+.social-footer .linkedin {
+    background: #0A66C2;
+}
+
+.social-footer .youtube {
+    background: #FF0000;
+}
+
+.social-footer .telegram {
+    background: #229ED9;
+}
 /* Prevent individual links from introducing extra margins */
 .social-footer__icons a {
     margin: 0;
