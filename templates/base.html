@@ -219,23 +219,33 @@ setInterval(() => {
 
 }, 5000);
 <script>
+<script>
 window.addEventListener("scroll", function () {
 
     let scrollTop = document.documentElement.scrollTop;
-
     let scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-
     let progress = (scrollTop / scrollHeight) * 100;
 
     document.getElementById("progressBar").style.width = progress + "%";
 
 });
+</script>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    const flashes = document.querySelectorAll(".flash");
 
-...
+    flashes.forEach(function (flash) {
+        setTimeout(function () {
+            flash.classList.add("hide");
+
+            setTimeout(function () {
+                flash.remove();
+            }, 500);
+
+        }, 4000);
+    });
 });
-</script>
 
     const flashes = document.querySelectorAll(".flash");
 
