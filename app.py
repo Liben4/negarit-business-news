@@ -16,7 +16,7 @@ import os
 import re
 import sqlite3
 import secrets
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, UTC
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from functools import wraps
 
@@ -254,7 +254,7 @@ def init_db():
     migrate_db(conn)
 
     if first_run:
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(UTC).isoformat()
 
         category_ids = {}
         for name in DEFAULT_CATEGORIES:
@@ -376,7 +376,7 @@ def save_upload(file_storage, db):
     file_storage.save(os.path.join(app.config["UPLOAD_FOLDER"], unique_name))
     db.execute(
         "INSERT INTO media (filename, original_name, uploaded_at) VALUES (?, ?, ?)",
-        (unique_name, safe_name, datetime.utcnow().isoformat()),
+        (unique_name, safe_name, datetime.now(UTC).isoformat())
     )
     return unique_name
 
@@ -495,7 +495,7 @@ def promote_scheduled_articles():
     """Flip any 'scheduled' article whose publish time has passed over to
     'published'. Runs on every request instead of relying on a cron/worker
     process, which keeps deployment simple for a small site like this."""
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(UTC).isoformat()
     db = get_db()
     db.execute(
         "UPDATE articles SET status = 'published', updated_at = ? "
@@ -536,7 +536,7 @@ def inject_globals():
         "site_name": SITE_NAME,
         "nav_categories": categories,
         "breaking_articles": breaking_articles,
-        "current_year": datetime.utcnow().year,
+        "current_year": datetime.now(UTC).year,
         "is_admin": bool(session.get("admin_id")),
     }
 
@@ -591,9 +591,9 @@ def index():
 
     # "Today" means today in SITE_TZ, not the server's own timezone —
     # same reasoning as scheduled publishing.
-    now_local = datetime.now(timezone.utc).astimezone(SITE_TZ)
+    now_local = datetime.now(UTC).astimezone(SITE_TZ)
     today_start_local = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_start_utc = today_start_local.astimezone(timezone.utc).replace(tzinfo=None).isoformat()
+    today_start_utc = today_start_local.astimezone(UTC).replace(tzinfo=None).isoformat()
 
     highlights = db.execute(
         """SELECT articles.*, categories.name AS category_name, categories.slug AS category_slug
