@@ -201,25 +201,19 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
     <span>&copy; {{ current_year }} {{ site_name }}. All rights reserved.</span>
   </div>
 </footer>
-<footer class="site-footer">
-</footer>
-
 <script>
 const slides = document.querySelectorAll(".slide");
 
-let current = 0;
+if (slides.length > 0) {
+    let current = 0;
 
-setInterval(() => {
-
-    slides[current].classList.remove("active");
-
-    current = (current + 1) % slides.length;
-
-    slides[current].classList.add("active");
-
-}, 5000);
-<script>
-<script>
+    setInterval(() => {
+        slides[current].classList.remove("active");
+        current = (current + 1) % slides.length;
+        slides[current].classList.add("active");
+    }, 5000);
+}
+</script>
 window.addEventListener("scroll", function () {
 
     let scrollTop = document.documentElement.scrollTop;
@@ -245,24 +239,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         }, 4000);
     });
-});
-
-    const flashes = document.querySelectorAll(".flash");
-
-    flashes.forEach(function (flash) {
-
-        setTimeout(function () {
-
-            flash.classList.add("hide");
-
-            setTimeout(function () {
-                flash.remove();
-            }, 500);
-
-        }, 4000);
-
-    });
-
 });
 </script>
 </body>
