@@ -201,52 +201,14 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
     <span>&copy; {{ current_year }} {{ site_name }}. All rights reserved.</span>
   </div>
 </footer>
-<script>
-const slides = document.querySelectorAll(".slide");
-
-if (slides.length > 0) {
-    let current = 0;
-
-    setInterval(() => {
-        slides[current].classList.remove("active");
-        current = (current + 1) % slides.length;
-        slides[current].classList.add("active");
-    }, 5000);
-}
-</script>
-window.addEventListener("scroll", function () {
-
-    let scrollTop = document.documentElement.scrollTop;
-    let scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-    let progress = (scrollTop / scrollHeight) * 100;
-
-    document.getElementById("progressBar").style.width = progress + "%";
-
-});
-</script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
+    // Auto-hide flash messages
     const flashes = document.querySelectorAll(".flash");
 
     flashes.forEach(function (flash) {
-        setTimeout(function () {
-            flash.classList.add("hide");
-
-            setTimeout(function () {
-                flash.remove();
-            }, 500);
-
-        }, 4000);
-    });
-});
-</script>
-</body>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const flashes = document.querySelectorAll(".flash");
-
-    flashes.forEach(function(flash) {
         setTimeout(function () {
             flash.style.transition = "opacity 0.5s ease";
             flash.style.opacity = "0";
@@ -254,11 +216,28 @@ document.addEventListener("DOMContentLoaded", function () {
             setTimeout(function () {
                 flash.remove();
             }, 500);
-
-        }, 4000); // disappears after 4 seconds
+        }, 4000);
     });
+
+    // Reading progress bar
+    const progressBar = document.getElementById("progressBar");
+
+    if (progressBar) {
+        window.addEventListener("scroll", function () {
+
+            let scrollTop = document.documentElement.scrollTop;
+            let scrollHeight =
+                document.documentElement.scrollHeight -
+                document.documentElement.clientHeight;
+
+            let progress = (scrollTop / scrollHeight) * 100;
+
+            progressBar.style.width = progress + "%";
+        });
+    }
+
 });
 </script>
+
 <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
-</body>
-</html>
+
