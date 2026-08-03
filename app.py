@@ -1088,5 +1088,6 @@ def reset_admin():
     )
     db.commit()
     return "Admin password reset successfully!"
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
