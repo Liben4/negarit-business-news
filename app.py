@@ -525,6 +525,15 @@ def forbidden(e):
 
 @app.context_processor
 def inject_globals():
+    breaking_articles = db.execute(
+    """
+    SELECT title, slug
+    FROM articles
+    WHERE status='published'
+    ORDER BY created_at DESC
+    LIMIT 10
+    """
+).fetchall()
     db = get_db()
     categories = db.execute("SELECT * FROM categories ORDER BY name").fetchall()
     breaking_articles = db.execute(
