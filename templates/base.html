@@ -240,4 +240,33 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
 
+    const slides = document.querySelectorAll(".hero");
+
+    if (slides.length <= 1) {
+        return;
+    }
+
+    let current = 0;
+
+    function showSlide(index) {
+        slides.forEach(slide => {
+            slide.classList.remove("hero--active");
+            slide.style.display = "none";
+        });
+
+        slides[index].style.display = "flex";
+        slides[index].classList.add("hero--active");
+    }
+
+    showSlide(0);
+
+    setInterval(function () {
+        current = (current + 1) % slides.length;
+        showSlide(current);
+    }, 5000);
+
+});
+</script>
